@@ -271,9 +271,223 @@ A pure function is a specific kind of value returning function. It has the follo
 - It always produces the same value, in fact it is substitutable for that value
 
 # Chapter 4
+When working with the real world, it can get overwhelming to create all of those bindings just to solve your problem. It makes more sense to havce a structure that could make up those bindings that you already made. Those are called objects. 
 
-## Rest Parameters
-if you use the ... when you are working with arrays you can spread one array into another. Or spread it as a parameter
+The example problem is the WereSquirel Jaques who sets out to identify the root cause of his condition. Turning into a squirel... 
+## Datasets
+To work with data you will end up using data structures. Lets say we wanted to work with numbers. JS has a data strucutre called an array to store that collection of numbers like so:
 
-## Destructuring
-You can de-structure (decompose?) a data structure into 
+```javascript
+let arrayOfNumbers = [2,3,5,7,11,14];
+console.log(arrayOfNumbers[2]); //5
+console.log(arrayOfNumbers[0]); //2
+
+//properties
+console.log(arrayOfNumbers.length);//6
+console.log(arrayOfNumbers["length"]);//6
+```
+
+For arrays you can access a particular value on the list using the [] (square brackets) and providing the zero-based index of the value that you want.
+
+## Properties
+Objects have properties. You can see that in the code we write ```arrayOfNumbers.length``` to access the ```length``` property of the ```arrayOfNumbers``` object. There are two main ways to access a property in JS. You can either use a dot like ```arrayofNumbers.length``` or square brackets like ```arrayOfNumbers["length"]``` 
+
+## Methods
+When objects perform a specific behavior they also have properties that hold function values. These are called methods. Like how its an object does something or rather its _method_ of doing something.
+
+```javascript
+//methods
+console.log("\nMethods:");
+let oops = "Doh";
+console.log(typeof oops); //string
+console.log(typeof oops.toUpperCase); //function
+console.log(oops.toUpperCase()); //DOH
+```
+In the code we bind the string ```"Doh"``` into the name ```oops```. ```oops``` is a string object. We access the method of the string called ```toUpperCase``` which takes the string and returns the string in all CAPS.
+
+The properties than an object contain vary on its type.
+
+## Objects
+So back to the example, Jacques is trying to determine what is causing him to turn. He logs his events and writes down whether he turned into a squirel or not. 
+
+In JS there a type called an object that are arbitrary cllections of properties (and methods, which are also properties with functions as values). Here is a Jaques first logged day:
+
+```javascript
+console.log("\nObjects:");
+let day1 = {
+    squirrel: false,
+    events: ["work", "touched tree", "pizza", "running"]
+};
+
+console.log(day1.squirrel); //false
+console.log(day1.chicken); //undefined
+
+//adding another property after
+day1.chicken = true;
+console.log(day1.chicken); //true
+```
+
+So here we created bind an object into day1 and its has the property for ```squirrel``` (a boolean) and ```events``` (a string array). Its wrapped in ```{}``` and ends with a ```;```.
+
+you can also see that we can add a property like chicken once it was already declared by assigning a binding to the object. 
+
+```javascript
+delete day1.chicken;
+console.log(day1.chicken); //undefined
+```
+
+You can also use the delete operator to remove the binding (cutting off an arm). It doesnt happen often but it can! 
+
+If you want to check what propertie an object has you can use the ```in``` operator to check if a particular property is in an object or the Object.keys method to see all of the properties an object has.
+
+```javascript
+//checking if a property is in an object
+console.log(Object.keys(day1)); //['squirrel', 'events']
+console.log("squirrel" in day1); //true
+```
+## Mutability
+Certain types that you will deal with are what is called _immutable_ which means the values of those types are impossible to change. Some examples are strings, numbers and Booleans.
+
+Objects are the opposite, they are *mutable*. The values in their properties can be different.
+
+Objects They could have the same values, in their properties but the references are different which makes them different objects.
+
+Think about having the numbers 120 and 120. But if you have two object with ```{ value : 120}``` and ```{value: 120 }```. These objects are different. There is a difference between having two *references* to the same object and having two objects that have the same properties.
+
+```javascript
+let object1 = {value: 10};
+let object2 = object1;
+let object3 = {value: 10};
+
+console.log(object1 == object2); //true
+console.log(object1 == object3); //false
+
+object1.value = 15;
+console.log(object2.value);//15
+console.log(object3.value);//10
+```
+In the above ```object1``` and ```object2``` are the same because they are bindings to the same object. Whereas ```object3``` is different object instance it just happens to have similar properties. Using the ```==``` operator, we are comparing their identities.
+
+> There is no content to content comparison out of the box with JavaScript. Although you can implement your own easily.
+
+## Pizza's and Squirrels
+In the example in the book, Jacques starts recording events in his life and the moments that he turned into a squirrel. With this you can calculate the phi coefficient to, which just measures if the two events are related. 
+
+> Gonna step out a bit here, since the data is in the sandbox as a part of the book. But it is downloadable
+
+We use the Correlation formula (phi) to do this. Then we setup a getter to get the parameters we would pass into the phi function. Then we just looking for the one with the largest correlation.
+
+## Array Methods
+
+#### shift and unshift
+you can add elements to an array using push (at the end), and remove them using pop (at the end). The ```shift``` method and ```unshift``` method add and remove elements at the start of an array.
+
+```javascript
+console.log("\narray methods");
+let thingsToDo = [];
+thingsToDo.push("hello");
+thingsToDo.push("world");
+thingsToDo.push("how");
+thingsToDo.push("are");
+thingsToDo.push("you?");
+thingsToDo.push("huh?")
+
+console.log(thingsToDo);
+//[ 'hello', 'world', 'how', 'are', 'you?', 'huh?' ]
+
+console.log(thingsToDo.pop()); //huh?
+console.log(thingsToDo); //[ 'hello', 'world', 'how', 'are', 'you?' ]
+
+//shift (removes) unshift (adds)
+console.log(thingsToDo.shift());// hello
+console.log(thingsToDo.shift()); //world
+
+thingsToDo.unshift("hi!");
+console.log(thingsToDo); //[ 'hi!', 'how', 'are', 'you?' ]
+```
+#### indexOf and lastIndexOf
+If you are looking for an item inside the array there are methods ```indexOf``` and ```lastIndexOf``` which return the index of the item you pass in, the difference is indexOf starts at the beginning whereas lastIndexOf starts the the end of the array.
+
+```javascript
+console.log("\narray methods: index")
+let arrayOfNumbers2 = [1,2,3,4,5,6,7,8,1,9,10];
+
+console.log(arrayOfNumbers2.indexOf(1)); //0
+console.log(arrayOfNumbers2.lastIndexOf(1)); //8
+```
+#### Concat and Slice
+You can combine arrays and dice them up using the concat and slice methods.
+
+## String Methods
+Things are similar to arrays in that they are just arrays of char fields, they are a string of chars. So the same methods may work there. 
+
+But since we are working with words there are also additional methods.
+
+```javascript
+console.log("\nstring methods:")
+let hw = "   hello world how are you?   ";
+console.log(hw.length); //30
+console.log(hw.indexOf("world")); //9 (world starts at index 9)
+
+hw = hw.trim(); //trim spaces
+console.log(hw.length); //24
+
+let arrayOfHw = hw.split(" ");
+console.log(arrayOfHw); //[ 'hello', 'world', 'how', 'are', 'you?' ]
+```
+
+### Rest Parameters
+When working with arrays, it can be useful to pass in the entire array as individual values. In JS there is the rest parameter to pass the entire array as parameters into any function or a way to create new arrays.
+
+Use the ... when you are working with arrays you can spread one array into another. Or spread it as a parameter into a function.
+
+```javascript
+console.log("\n rest parameters");
+
+let words = ["you", "are"];
+let finalWords = ["hope", ...words ,"having", "a", "good", "day"]
+console.log(finalWords);
+```
+
+### Destructuring
+You can de-structure (decompose?) a data structure into its elements by enclosing parameters in square brackets[]. 
+
+For example instead of doing below where you are accessing the table with hard coded indexes.
+
+```javascript
+function phi(table) {
+  return (table[3] * table[0] - table[2] * table[1]) /
+    Math.sqrt((table[2] + table[3]) *
+              (table[0] + table[1]) *
+              (table[1] + table[3]) *
+              (table[0] + table[2]));
+}
+```
+
+You can do the following:
+```javascript
+function phi([n00, n01, n10, n11]) {
+  return (n11 * n00 - n10 * n01) /
+    Math.sqrt((n10 + n11) * (n00 + n01) *
+              (n01 + n11) * (n00 + n10));
+}
+```
+So as long as you are passing in an array, the positions will map to the positions of the characters. The [] brackets allow you to look inside the value.
+
+## JSON
+Properties only grasp their value, which means that objects and arrays really just hold the memory addresses of their contents. 
+
+So this is what is going on inside your computer, but what if you wanted to share this with another computer? Would you just send them the same memory addresses?
+
+You can *serialize* that data (turn it into a flat description). JSON is a popular serialization format and serializes objects and data as a string.
+
+In JSON, the way you create objects are similar to JS objects. Its just that the names have to be in double quotes and only simple data expressions are allowed. No functions or binding or anything that involves computation.
+
+```javascript
+let string = JSON.stringify({squirrel: false, events: ["weekend"]});
+console.log(string);
+//{"squirrel":false,"events":["weekend"]}
+console.log(JSON.parse(string).events);
+// → ["weekend"]
+```
+In the code above you have JS object passed as a parameter into the JSON.```stringify()``` function. This returns a string which describes the object as  JSON. Then we take that string and pass it as an arguement into the ```JSON.parse()``` function to get the events property of the the returned JS object.
