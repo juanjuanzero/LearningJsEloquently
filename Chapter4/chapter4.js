@@ -93,3 +93,145 @@ console.log("\n rest parameters");
 let words = ["you", "are"];
 let finalWords = ["hope", ...words ,"having", "a", "good", "day"]
 console.log(finalWords);
+
+console.log("\nexcercise");
+// Your code here.
+let sum = function(numbers){
+	let s = 0;
+  	for(let number of numbers){
+    	s += number;
+    }
+  	return s;
+};
+
+let range = function(first, last, step){
+	let r = [];
+  if(step == null) step = 1;	
+  	if(first > last) {
+      for(let i = first; i >= last; i += step){
+    	r.push(i);
+    	}
+    }else{
+    for(let i = first; i <= last; i += step){
+    	r.push(i);
+    	}
+    }
+  	
+  	return r;
+}
+
+console.log(range(1, 10));
+// → [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+console.log(range(5, 2, -1));
+// → [5, 4, 3, 2]
+console.log(sum(range(1, 10)));
+// → 55
+
+console.log("\nArray Reversals")
+// Your code here.
+let reverseArray = function(arrayInput){
+	let a = [];
+  for(let i of arrayInput){
+    	a.unshift(i); //add it to the front
+    }
+  return a;
+};
+
+let reverseArrayInPlace = function(arrayInput){
+  let lastIndex = arrayInput.length - 1;
+  let midPoint = lastIndex / 2;
+  for(let i = 0; i <= midPoint; i++){
+    if(i != midPoint){
+    
+  	let first = arrayInput[i];
+    let last = arrayInput[lastIndex - i];
+    
+    arrayInput[i] = last;
+    arrayInput[lastIndex - i] = first;
+    }
+  }
+  return arrayInput;
+};
+
+console.log(reverseArray(["A", "B", "C"]));
+// → ["C", "B", "A"];
+let arrayValue = [1, 2, 3, 4, 5];
+reverseArrayInPlace(arrayValue);
+console.log(arrayValue);
+// → [5, 4, 3, 2, 1]
+
+console.log("\ntoArray toList")
+// Your code here.
+let arrayToList = function(arrEl){
+    if(arrEl.length > 0){
+        let val = arrEl.shift();
+      let obj = { value: val, rest: arrayToList(arrEl)}
+      return obj;
+    }else{
+      return null;
+    }
+  };
+  
+  let listToArray = function(list){
+    let arr = [];
+    arr.push(list.value);
+    let rst = list.rest;
+    while(rst != null){
+        arr.push(rst.value);
+      rst = rst.rest;
+    }
+    return arr;
+  };
+  //prepend
+  let prepend = function(n, list){
+    let obj = {value: n, rest: list};
+    return obj;
+  }
+  //recursive version of nth
+  let nth = function(list, idx, counter = 0){
+    if(idx != counter){
+        list = list.rest;
+      counter++;
+      return nth(list,idx,counter);
+    }else{
+        return list.value;
+    }
+  };
+  console.log(arrayToList([10, 20]));
+  // → {value: 10, rest: {value: 20, rest: null}}
+  console.log(listToArray(arrayToList([10, 20, 30])));
+  // → [10, 20, 30]
+  console.log(prepend(10, prepend(20, null)));
+  // → {value: 10, rest: {value: 20, rest: null}}
+  console.log(nth(arrayToList([10, 20, 30]), 1));
+  // → 20
+
+  console.log("\ndeep comparison");
+  // Your code here.
+let deepEqual = function(obj1, obj2){
+    if(typeof obj1 == "object" && typeof obj1 == typeof obj2){
+      for(let k of Object.keys(obj1)){
+          if(obj1[k] == obj2[k]){
+              continue;
+          }else{
+                if(typeof obj1[k] == "object" || typeof obj2[k] == "object"){
+                  return deepEqual(obj1[k], obj2[k]);
+              }else{
+                  return false;
+                    break;
+              }
+          }
+      }
+      return true;
+    }else{
+        return obj1 == obj2;
+    }
+  };
+  
+  let obj = {here: {is: "an"}, object: 2};
+  console.log(deepEqual(obj, obj));
+  // → true
+  console.log(deepEqual(obj, {here: 1, object: 2}));
+  // → false
+  console.log(deepEqual(obj, {here: {is: "an"}, object: 2}));
+  // → true

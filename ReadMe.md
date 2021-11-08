@@ -219,7 +219,7 @@ But after the function is called, do those local bindings inside the function di
 
 See this function below
 ```javascript
-console.log("\nClosures\n");
+console.log("Closures\n");
 function wrapValue(n){
     let local = n;
     return () => local;
@@ -491,3 +491,4 @@ console.log(JSON.parse(string).events);
 // → ["weekend"]
 ```
 In the code above you have JS object passed as a parameter into the JSON.```stringify()``` function. This returns a string which describes the object as  JSON. Then we take that string and pass it as an arguement into the ```JSON.parse()``` function to get the events property of the the returned JS object.
+
