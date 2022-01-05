@@ -492,3 +492,90 @@ console.log(JSON.parse(string).events);
 ```
 In the code above you have JS object passed as a parameter into the JSON.```stringify()``` function. This returns a string which describes the object as  JSON. Then we take that string and pass it as an arguement into the ```JSON.parse()``` function to get the events property of the the returned JS object.
 
+# Chapter 5
+> Nice abs, Do you workout?
+
+Abstractions hide details and give us the ability to talk about problems at a higher level. 
+
+> It is a useful skill, in programming, to notice when you are working at too low a level of abstraction.
+
+When you are so low of a level of abstraction, you wont really be working with the concepts that you are concerned about. You are using things that may not even relate to your problem... which leads to confusion... and bugs.
+
+In JS, you can abstract "doing something N times" in to a fuction. Like so:
+
+```javascript
+function repeast(n, action){
+    for(let i = 0; i < n; i++>){
+        action(i);
+    }
+}
+
+repeat(3, console.log);
+//0
+//1
+//2
+```
+
+But you dont have to pass in a function, you can just pass in a function value. Below we are passing in an expression, which is just in a single line.
+
+```javascript
+//creating a funtion value (an expression)
+let labels = []
+repeat(5, i => labels.push(`Hello ${i + 1}`)); //using backtics for string literal 
+console.log(labels);
+//[ 'Hello 1', 'Hello 2', 'Hello 3', 'Hello 4', 'Hello 5' ]
+```
+
+Repeat is an example of a higher-order function. They operate on other functions by either taking them as arguements or by returning them. 
+
+Higher order functions allow for you to create abstractions over other functions. For example. Below allows you to create easier functions to work with.
+
+```javascript
+function greaterThan(n) {
+  return m => m > n;
+}
+let greaterThan10 = greaterThan(10);
+console.log(greaterThan10(11));
+//true
+```
+
+The greaterThan10 is created from the greaterThan function, and abstracts away the greaterThan function.
+
+```javascript
+function noisy(f) {
+  return (...args) => {
+    console.log("calling with", args);
+    let result = f(...args);
+    console.log("called with", args, ", returned", result);
+    return result;
+  };
+}
+noisy(Math.min)(3, 2, 1);
+// → calling with [3, 2, 1]
+// → called with [3, 2, 1] , returned 1
+```
+The noisy function here takes in a function, ```f```, and returns an expression with the parmeter ```...args``` that logs "calling with", and then executes the function with the ```...args``` as the arguements and logs the result and writes it to the console.
+
+## Filtering Arrays
+You can filter arrays using the Array.filter method. This function takes in a function as the test to determine whether it should be added or not.
+
+## Transforming with Map
+The map method transforms an object by applying the function that you pass into it to that object.
+
+## Sumarizing with Reduce
+The reduce function takes in a combining function that results in a single summary value.
+
+```javascript
+
+  console.log("\nreduce");
+  console.log([1,2,3,4,5].reduce((a,b) => a + b)); //15
+```
+The reduce funtion in the example above starts at the first value which take 1 and 2 as arguements. 1 + 2 = 3. Then the returned result gets passed in to the next iteration, 3 + 3.
+ 
+## Composing
+The value that you get from these array methods really add up when you start to put them to work together. Its like piping the results from one method into another or using the results into another. And further more, when you uses these abstractions you can see that your code is much more easier to read.
+
+## Strings and Character Codes
+In JS strings are encoded as a sequence of 16-bit numbers. These are called *code units*. When it became clear that 16 bits was not enought, UTF-16 was invented to account for less common characters. For the common characters UTF-16 uses a single 16-bit code, however, UTF-16 uses a pair of 16-bit units to account for the less common characters.
+
+In JS, a few strings opertions like the length property, or the [] accessor for contents deal only in code units. THe ```charCodeAt``` in JS will give you *a* code unit, not a full character code. Whereas, the ```codePointAt``` gives you the Unicode character.
