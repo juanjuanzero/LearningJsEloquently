@@ -579,3 +579,159 @@ The value that you get from these array methods really add up when you start to 
 In JS strings are encoded as a sequence of 16-bit numbers. These are called *code units*. When it became clear that 16 bits was not enought, UTF-16 was invented to account for less common characters. For the common characters UTF-16 uses a single 16-bit code, however, UTF-16 uses a pair of 16-bit units to account for the less common characters.
 
 In JS, a few strings opertions like the length property, or the [] accessor for contents deal only in code units. THe ```charCodeAt``` in JS will give you *a* code unit, not a full character code. Whereas, the ```codePointAt``` gives you the Unicode character.
+
+# Chapter 6
+## Encapsulation
+In object-oriented programming the goal is to divide out the program into smaller chuncks to make each manage its own state. Then those chunks/pieces work together to get something done. So then each piece can go about itself without affecting other pieces, discrete points of knowledge is kept isolated in each piece.
+
+### Interfaces
+The different pieces of the program interact with each other through what is called *interfaces*. These are functions that add functionality at a more abstract level, the implementation is hidden within the function.
+
+Interfaces consist of *methods* and *properties* which are designated as public properties (methods and properties). An object can have private properties, which outside code has no access of using. Private properties are not a part of the *interface* because an interface is how outside code works with the object.
+
+#### Methods
+Remember how in earlier chapters we had variables that held functions. Methods are just properties that hold functions as values.
+
+```JavaScript
+let rabbit = {};
+rabbit.speak = function(line){
+  console.log(`The rabbit says '${line}'`);
+};
+
+rabbit.speak("Ha!! I'm alive!");
+//The rabbit says 'Ha!! I'm alive!'
+```
+Here we create an empty object and add a speak *method* (property called speak) that is a function that returns a string.
+
+#### this in JavaScript
+When you are working with methods, it is typical that a method will do something with the object is called on.
+
+```javascript
+function speak(line){
+  console.log(`This ${this.type} rabbit says '${line}'`);
+}
+
+let filipinoRabbit = {type: "pinoy", speak};
+let hungryRabbit = {type:"hungry", speak};
+
+filipinoRabbit.speak("Hoy! What's up doc?");
+hungryRabbit.speak("I would like a carrot please.");
+
+```
+Here we have speak function that we make a method when we instantiate the ```filipinoRabbit``` and the ```hungryRabbit```. The speak method has the line that uses ```this.type``` to access the type that is in each object.
+
+You can also using the call method on the function which takes the object instance (what would be ```this```) and then the rest of the parameters.
+
+```javascript
+speak.call(hungryRabbit, "Yum!");
+```
+
+Each function has its own ```this``` binding which gets passed in like the case in the call method of the speak function we defined. The key difference here is the ```this``` changes with the way its called. We've seen ```this``` refer to the object instance used in a method call and using the call method in the speak function above. 
+
+#### Arrow Functions and this
+In JavaScript Arrow Functions behave differently when working with ```this``` keyword. They dont bind their own this but can see the ```this``` binding around them.
+
+## Prototypes
+In addition to their own properties most objects also have *prototypes*. Its like a fall back object for properties. When an object gets a request for a property that it does not have, its prototype is searched for the property, then the prototypes properties and so on an so on...all the way down.
+
+
+```javascript
+console.log(Object.getPrototypeOf({}) == Object.prototype);
+//true
+console.log(Object.getPrototypeOf(Object.prototype));
+//null
+```
+The ancestor of an empty object is ```Object.prototype```, the prototype of that is null. However, many objects have their own prototype which provide a different set of properties. Functions derive from ```Function.prototype``` and arrays derive from ```Array.prototype```.
+
+```javascript
+console.log(Object.getPrototypeOf([]) == Array.prototype);
+```
+
+We can use Object.create to create an object with a specific prototype.
+
+```javascript
+//create a prototype
+let protoRabbit = {
+    speak(line) {
+        console.log(`The ${this.type} rabbit exclaims '${line}'`);
+    }
+};
+let killerRabbit = Object.create(protoRabbit); //create an object with a prototype.
+killerRabbit.type = "killer";
+killerRabbit.speak("MUUUUUUUUUUUUURRRRDER!!!");
+
+let hungerRabbit = Object.create(protoRabbit); //create an object with a prototype.
+hungerRabbit.type = "hunger";
+hungerRabbit.speak("Hunger!!!");
+```
+
+See how the killerRabbit and the hungerRabbit both share the same implementation? This is because they derive from the same prototype of protoRabbit.
+
+## Classes
+In OOP there's a concept called classes where a class defines a shape of an object (the methods and properties it has). This object is called an instance of the class. Prototypes then is like an informal take on a class like how the protoRabbit defined the properties of the killerRabbit and hungerRabbit instances.
+
+When you want to create instances of a class you also have to make sure that the instance has the appropriate properites. When we created the killer and hunger Rabbits, we had to assign values to it's type properties. That would be cumbersome, so instead we have *constructor functions* aka *constructors*
+
+```javascript
+function makeRabbitInstance(type){
+    let rabbit = Object.create(protoRabbit);
+    rabbit.type = type;
+    return rabbit;
+}
+
+let kindRabbit = makeRabbitInstance("kind");
+kindRabbit.speak("Hello, what a pleasure it is to meet you.");
+```
+Here we assign the type passed in to the type property and also have the Object.create() to create a protoRabbit for us.
+
+JavaScript has an even nicer way to doing this by creating a function the ```new``` keyword, by convention we will capitalize the function name to signify that it creates an object.
+
+```javascript
+
+function Rabbit(type){
+    this.type = type;
+}
+Rabbit.prototype.speak = function(line){
+    console.log(`This ${this.type} rabbit says '${line}'`);
+}
+
+let kinderRabbit = new Rabbit("kinder");
+kinderRabbit.speak("Hello, you look nice today");
+
+let meanRabbit = new Rabbit("mean");
+meanRabbit.speak("barg barg barg!");
+```
+Here we created a new instance of a Rabbit called kinderRabbit and meanRabbit using the ```new``` keyword. We access the prototype property of the Rabbit function to assign the speak property of the prototype to a function that logs to the console.
+
+> All constructors automatically get a property named prototype which can point to another prototype. Recall how the empty object derives from Object.prototype.
+
+### Class Keyword
+In 2015, JavaScipt we have less awkward notation for constructing objects. With the ```class``` keyword you can declare a class and define a special function called ```constructor``` which handles the construction of object instances. Other properties like the *speak method* is also defined in the class declaration. 
+
+```javascript
+//declaring a class
+class OtherRabbit{
+    constructor(type){
+        this.type = type;
+    }
+
+    speak(line){
+        console.log(`The ${this.type} rabbit says '${line}'`);
+    }
+}
+
+let otherKinderRabbit = new OtherRabbit("other kinder");
+otherKinderRabbit.speak("Hello, you even nicer today");
+
+let otherMeanRabbit = new OtherRabbit("other mean");
+otherMeanRabbit.speak("barg barg barg BORK!");
+```
+
+Here we declare a class called OtherRabbit using the class keyword. There is a special function called constructor that initializes the type property of the object. We create two instances of otherKinderRabbit and otherMeanRabbit.
+
+### How do you handle non-fuction values as properties?
+For now you can only have methods in an class declaration in JS. You can create non-function properties by directly manipulating the prototype after you've defined the class.
+
+### Can you have multiple constructors?
+
+
