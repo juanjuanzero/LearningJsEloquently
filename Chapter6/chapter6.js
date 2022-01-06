@@ -137,3 +137,136 @@ console.log(stringIterator.next()); //l
 console.log(stringIterator.next()); //l
 console.log(stringIterator.next()); //o
 console.log(stringIterator.next()); //done is true
+
+console.log("\n----Getters, Setters and Statics---\n");
+//object with a getter
+let varyingSize = {
+    get size(){
+        return Math.floor(Math.random() * 100);
+    }
+}
+
+console.log(varyingSize.size); //random number
+console.log(varyingSize.size); //random number
+
+
+console.log("\n----Getters, Setters and Statics: Temp---\n");
+class Temp {
+    constructor(celsius){
+        this.celsius = celsius;
+    }
+
+    get fahrenheit(){
+        return this.celsius * 1.8 + 32;
+    }
+    set fahrenheit(value){
+        this.celsius = (value - 32) / 1.8;
+    }
+
+    static fromFahrenheit(value){
+        return new Temp((value - 32) / 1.8);
+    }
+}
+
+let t1 = new Temp(0);
+console.log(t1.fahrenheit); //32, freezing!
+
+t1.fahrenheit = 86;
+
+console.log(t1.fahrenheit); //86
+console.log(t1.celsius); //30
+
+let t2 = Temp.fromFahrenheit(100);
+console.log(t2.fahrenheit);
+console.log(t2.celsius);
+
+
+console.log("\n----InstanceOf---\n");
+console.log(t1 instanceof Temp);//true
+console.log(t1 instanceof Rabbit);//false
+
+
+console.log("\n----Excercises : A Vector Type---\n");
+class Vec {
+    constructor(x , y){
+        this.x = x;
+        this.y = y;
+    }
+
+    plus(otherVec){
+        let newX = this.x + otherVec.x;
+        let newY = this.y + otherVec.y;
+        return new Vec(newX, newY);
+    }
+
+    minus(otherVec){
+        let newX = this.x - otherVec.x;
+        let newY = this.y - otherVec.y;
+        return new Vec(newX, newY);
+    }
+
+    get length(){
+        let sq = Math.pow(this.x,2) + Math.pow(this.y,2);
+        return Math.pow(sq, .5);
+    }
+}
+
+console.log(new Vec(1,2).plus(new Vec(2,3)));
+console.log(new Vec(1,2).minus(new Vec(2,3)));
+console.log(new Vec(3,4).length);
+
+
+console.log("\n----Excercises : Groups---\n");
+class Group {
+    constructor(){
+        this.items = [];
+    }
+
+    add(toAdd){
+        if(this.items.length > 0){
+            //check if its already there
+            let found = this.items.indexOf(toAdd);
+            if(found >= 0){
+                return;
+            }
+        }
+        //add it
+        this.items.push(toAdd);
+    }
+
+    has(toFind){
+        let found = this.items.indexOf(toFind);
+        if(found >= 0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    delete(toDelete){
+        let found = this.items.indexOf(toDelete);
+        //if you find it take the last item in the array and place it in 
+        if(found >= 0){
+            let replace = this.items.pop;
+            this.items[found] = replace;
+        }
+    }
+
+    static from(itterableObject){
+        let newGroup = new Group();
+        for (const iter of itterableObject) {
+            newGroup.add(iter);
+        }
+        return newGroup;
+    }
+}
+
+let group = Group.from([10, 20]);
+console.log(group.has(10));
+console.log(group.has(30));
+group.add(10);
+group.delete(10);
+console.log(group.has(10));
+
+
+console.log("\n----Excercises : Iterable Groups---\n");

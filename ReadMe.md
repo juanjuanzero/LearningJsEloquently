@@ -808,7 +808,7 @@ console.log([1,2,3][toStringSymbol]()); //our symbol
 ```
 Here we create a symbol with the name toString and then assign the prototype property of the array with a function. We then also access the function using [] with the () next to it.
 
-## The iterator interface
+### The iterator interface
 Objects given to a for/of loop is expected to be *iterable*, which has a method named with the *Symbol.iterator* symbol. When this is called this retors an object that provides a second interface called *iterator* which actually does the iterating.
 
 Iterators has a *next* method that returns the next result. The result is an object with a value and a done property. Done means the iterator is done iterating meaning there are no more items to go next.
@@ -825,3 +825,66 @@ console.log(stringIterator.next()); //o
 console.log(stringIterator.next()); //done is true
 ```
 Here we have a string and assign the value of the iterator object on the string to the variable ```stringIterator```. Then all we do is the next method to iterate through the string until we reach the done point.
+
+### Getters, Setters and Statics
+Getters are methods that are in an interface of an object. This is done using the get keyword infront of the method call. 
+
+```javascript
+//object with a getter
+let varyingSize = {
+    get size(){
+        return Math.floor(Math.random() * 100);
+    }
+}
+
+console.log(varyingSize.size); //random number
+console.log(varyingSize.size); //random number
+```
+Here we create an object with a size property that returns a random number. This size() is really a *getter*. There are also setters which is a similar effect.
+
+```javascript
+class Temp {
+    constructor(celsius){
+        this.celsius = celsius;
+    }
+
+    get fahrenheit(){
+        return this.celsius * 1.8 + 32;
+    }
+    set fahrenheit(value){
+        this.celsius = (value - 32) / 1.8;
+    }
+
+    static fromFahrenheit(value){
+        return new Temp((value - 32) / 1.8);
+    }
+}
+
+let t1 = new Temp(0);
+console.log(t1.fahrenheit); //32, freezing
+
+t1.fahrenheit = 86;
+
+console.log(t1.fahrenheit); //86
+console.log(t1.celsius); //30
+```
+
+The Temp class has a constructor that takes in the temperature in Celsius. The getter and set methods are both in fahreheit so a conversion needs to be done when the value is returned. The *setter* takes in a parameter called ```value``` it is what was passed in as to the *setter* method and the value for celsius is set as the converted value. 
+
+The Temp class also allows you to have a static method that returns an instance of a Temp class. You can access this static method without first having to create an instance of a class.
+
+```javascript
+let t2 = Temp.fromFahrenheit(100);
+console.log(t2.celsius); //37.77777778
+console.log(t2.fahrenheit); //100
+```
+## Inheritance
+you can create a class (a subclass) using the extends keyword to extend the properties of another class (a super class). In this way the you are inheriting the other class' properties and modifying it slighting (or extending it). This is called Inheritance. 
+
+## InstanceOf Operator
+You can use the instanceOf operator to check if an object is a direct instance of another.
+
+```javascript
+console.log(t1 instanceof Temp);//true
+console.log(t1 instanceof Rabbit);//false
+```
