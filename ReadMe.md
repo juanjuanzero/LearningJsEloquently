@@ -734,4 +734,94 @@ For now you can only have methods in an class declaration in JS. You can create 
 
 ### Can you have multiple constructors?
 
+### Overriding Properties
+You can override properties on the prototype by having properties on the object with the same name. For example, if you call toString on an array you get something close to calling the join method on the array. However, if you call Object.prototype.toString you will get something else.
 
+## Maps
+Maps in JavaScript is basically similar to dictionaries in python or C#. Its a data structure of a collection of key-value pairs, the values are accessed through keys, and check if a key is in a Map.
+
+Below we use a plain object to create a Map in JavaScript (a bad idea).
+
+```javascript
+let ages = {
+  Boris: 29,
+  Liang: 22,
+  Julia: 60
+};
+//access a value in
+console.log(`Julia is ${ages["Julia"]}`); //60
+//check if a key is in a Map
+console.log(`Is Jack's age known?`, "Jack" in ages); //false
+//something weird
+console.log(`Is toString age known?`, "toString" in ages); //true?
+```
+Its weird how toString is in ages right? This is because toString is a property of ages (a Map object instance) and plain object derive from *Object.prototype*, so it looks like the property is there eventhough it shouldn't be. 
+
+This is why using a plain object as a Map is dangerous and this is why the Map class is available to us in JavaScript.
+
+```javascript
+let agesMap = new Map() 
+agesMap.set("Boris", 29);
+agesMap.set("Liang", 22);
+agesMap.set("Julia", 60);  
+//access a value in
+console.log(`Julia is ${agesMap.get("Julia")}`); //60
+//check if a key is in a Map
+console.log(`Is Jack's age known?`, "Jack" in agesMap); //false
+//something weird
+console.log(`Is toString property available?`, "toString" in agesMap); //true?
+console.log(`Is toString key in keys?`, agesMap.has("toString")); //false
+```
+
+Here we create a Map object and use the set and get methods to work with the key-value pairs of the Map object. The Map object has the toString property since it still derives from Object.prototype, however, now when you check for a key you see tells you the correct information.
+
+## Polymorphism
+Remember earlier where you have a String function which tries to create a meaningful string from whatever type is passed into it. The String fuction works with the toString method to do create that meaningful string. The toString method is an interface that is on an object. So in the cased of the String object, anything that supports the toString method (interface) will work with the the String function. The String function can work with many (poly) shapes (morph), it doesnt care what object it is, or class, as long as it implements the interface it cares about, in this case the toString method. This is polymorphism.
+
+## Symbols
+It can be possible for many interfaces to use the same property name for different things. Its not really a problem in the wild but JavaScript has Symbols to help with this type of issue.
+
+> Property Names are Symbols
+
+Symbols are values created with the Symbol function and newly created symbols are unique.
+
+```javascript
+console.log("\n----Symbols---\n");
+let sym = Symbol("name");
+console.log(sym == Symbol("name")); //false
+Rabbit.prototype[sym] = 77;
+let awesomeRabbit = new Rabbit("awesome");
+console.log(awesomeRabbit[sym]); //77
+```
+
+You can then define symbols alongside similarly named interfaces with different implementations.
+
+```javascript
+
+const toStringSymbol = Symbol("toString");
+Array.prototype[toStringSymbol] = function(){
+    return `${this.length} is the length of the array`;
+};
+
+console.log([1,2,3].toString()); //1,2,3
+console.log([1,2,3][toStringSymbol]()); //our symbol
+```
+Here we create a symbol with the name toString and then assign the prototype property of the array with a function. We then also access the function using [] with the () next to it.
+
+## The iterator interface
+Objects given to a for/of loop is expected to be *iterable*, which has a method named with the *Symbol.iterator* symbol. When this is called this retors an object that provides a second interface called *iterator* which actually does the iterating.
+
+Iterators has a *next* method that returns the next result. The result is an object with a value and a done property. Done means the iterator is done iterating meaning there are no more items to go next.
+
+Remember how strings are just a bunch of characters chained together (strung together). With that in mind we can use that ourself.
+
+```javascript
+let stringIterator = "Hello"[Symbol.iterator]();
+console.log(stringIterator.next()); //H
+console.log(stringIterator.next()); //e
+console.log(stringIterator.next()); //l
+console.log(stringIterator.next()); //l
+console.log(stringIterator.next()); //o
+console.log(stringIterator.next()); //done is true
+```
+Here we have a string and assign the value of the iterator object on the string to the variable ```stringIterator```. Then all we do is the next method to iterate through the string until we reach the done point.

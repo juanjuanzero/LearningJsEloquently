@@ -86,3 +86,54 @@ otherKinderRabbit.speak("Hello, you even nicer today");
 
 let otherMeanRabbit = new OtherRabbit("other mean");
 otherMeanRabbit.speak("barg barg barg BORK!");
+
+console.log("\n----Maps---\n");
+let ages = {
+  Boris: 29,
+  Liang: 22,
+  Julia: 60
+};
+//access a value in
+console.log(`Julia is ${ages["Julia"]}`); //60
+//check if a key is in a Map
+console.log(`Is Jack's age known?`, "Jack" in ages); //false
+//something weird
+console.log(`Is toString age known?`, "toString" in ages); //true?
+
+let agesMap = new Map() 
+agesMap.set("Boris", 29);
+agesMap.set("Liang", 22);
+agesMap.set("Julia", 60);  
+//access a value in
+console.log(`Julia is ${agesMap.get("Julia")}`); //60
+//check if a key is in a Map
+console.log(`Is Jack's age known?`, "Jack" in agesMap); //false
+//something weird
+console.log(`Is toString property available?`, "toString" in agesMap); //true?
+console.log(`Is toString key in keys?`, agesMap.has("toString")); //false?
+
+
+console.log("\n----Symbols---\n");
+let sym = Symbol("name");
+console.log(sym == Symbol("name")); //false
+Rabbit.prototype[sym] = 77;
+let awesomeRabbit = new Rabbit("awesome");
+console.log(awesomeRabbit[sym]); //77
+
+const toStringSymbol = Symbol("toString");
+Array.prototype[toStringSymbol] = function(){
+    return `${this.length} is the length of the array`;
+};
+
+console.log([1,2,3].toString()); //1,2,3
+console.log([1,2,3][toStringSymbol]()); //our symbol
+
+
+console.log("\n----Iterator Interface---\n");
+let stringIterator = "Hello"[Symbol.iterator]();
+console.log(stringIterator.next()); //H
+console.log(stringIterator.next()); //e
+console.log(stringIterator.next()); //l
+console.log(stringIterator.next()); //l
+console.log(stringIterator.next()); //o
+console.log(stringIterator.next()); //done is true
