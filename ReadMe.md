@@ -888,3 +888,6 @@ You can use the instanceOf operator to check if an object is a direct instance o
 console.log(t1 instanceof Temp);//true
 console.log(t1 instanceof Rabbit);//false
 ```
+
+### Excercise Notes
+When you are overriding an iterator on the class declaration all you have to do is override the ```Symbol.iterator``` property and all that property does is instantiates an iterator class that gives the value of an iterable collection through an object with a ```value``` property and a boolean ```done``` property 

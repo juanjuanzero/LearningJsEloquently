@@ -217,9 +217,31 @@ console.log(new Vec(3,4).length);
 
 
 console.log("\n----Excercises : Groups---\n");
+class GroupIterator {
+    constructor(group){
+        this.ind = null;
+        this.group = group;
+    }
+
+    next(){
+        if(this.ind === null){this.ind = 0;}
+        if(this.group.items.length >= 0 && this.ind <= this.group.items.length - 1 ){
+            let value = this.group.items[this.ind];
+            this.ind++;
+            return {value, done: false};
+        }else{
+            return {done: true};
+        }
+    }
+}
+
 class Group {
     constructor(){
         this.items = [];
+    }
+
+    [Symbol.iterator] = function() {
+        return new GroupIterator(this);
     }
 
     add(toAdd){
@@ -259,6 +281,7 @@ class Group {
         }
         return newGroup;
     }
+
 }
 
 let group = Group.from([10, 20]);
@@ -270,3 +293,20 @@ console.log(group.has(10));
 
 
 console.log("\n----Excercises : Iterable Groups---\n");
+
+var gp = Group.from(["a", "b", "c", "d", "e"]);
+
+console.log(gp[Symbol.iterator]().next());
+for (let val of gp) {
+    console.log(val);
+}
+
+
+console.log("\n----Excercises : hasOwnProperty---\n");
+
+let map = {one: true, two: true, hasOwnProperty: true};
+
+// Fix this call
+console.log(Object.prototype.hasOwnProperty.call(map, "one"));
+// → true
+
