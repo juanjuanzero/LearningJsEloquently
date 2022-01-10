@@ -920,7 +920,78 @@ The code above will run with no problem; but the issue is that counter is not de
 JavaScript considered types only when actually running the program. Use TypeScript.
 
 ## Testing
-Use a test suite
+Use a test suite. Yep, that's it.
 
 ## Debugging
+When you are debugging you can see that there is an error. First resist the urge to make changes to the program randomly. Instead come up with a theory and test it out. This is the difference between someone who is screwing around and a professional.
 
+Consider the following function. It's suppose to convert a whole number to a string in a given base by repeatedly picking out the last digit and then dividing the number to get rid of the digit.
+
+```javascript
+
+function numberToString(n, base = 10){
+    let result = "", sign = "";
+    if (n < 0){
+        sign = "-";
+        n = -n;
+    }
+
+    do{
+        result = String(n % base) + result;
+        n /= base;
+        //console.log(n);
+    } while(n > 0);
+    return sign + result;
+}
+
+console.log(numberToString(13, 10));
+```
+So there is obviously a bug here, because we are getting an unexpected result. After looking into the do loop, and placing a console.log() in the do loop you see the error, you can't actually get a whole number just by dividing 10 every time.
+
+Here is the fixed code using Math.floor() to acutually escape the do-while loop.
+```javascript
+
+function numberToStringFixed(n, base = 10){
+    let result = "", sign = "";
+    if (n < 0){
+        sign = "-";
+        n = -n;
+    }
+
+    do{
+        result = String(n % base) + result;
+        n = Math.floor(n / base);
+        console.log(n);
+    } while(n > 0);
+    return sign + result;
+}
+
+console.log(numberToStringFixed(13, 10));
+console.log(numberToStringFixed(130, 10));
+```
+
+## Error Propagation
+Not all problems can be prevented, sometimes you get wrong information, something gets overloaded with work or the whole communication fails. Such is life, samething happens to computers. 
+
+When you are programming you want the program to do something better than just crash, sometimes you'll want to take the bad input in stride let the user know and then fail or actively do something in response of the problem.
+
+## Exceptions
+>You are the only exception... and i'm on my way to believe it.
+
+If only exceptions dealt with love stories. When a function cannot proceed normally the prefered thing we want to do is to immediately jump to a place that knows how to handle a problem. This is called Exception Handling.
+
+Exceptions are a mechanism that makes it possible for code that runs into a problem to raise and exception. It jumps out of not only the function but also its callers all the way down to the first call that started the execution. This is called *unwinding the stack* recall how the stack is a stack of contexts with its own bindings.
+
+How can exceptions become useful then? We'll as you encounter them, you can plan to catch them in your code. Once you've caught it, then you can do something it.
+
+You can wrap functions inside a try-catch-finally block. The ```try``` part is where you'd normally your code. The ```catch``` block is where you'd do to handle exceptions, like email something one, log someething or throw another exception. The ```finally``` block is code what gets executed no matter what happens.
+
+The thing is finding where to best place a try catch block is a bit tricky. If there is a piece of code that can do alot of damage, then its probably best if it was wrapped in a try catch block.
+
+## Selective Catching
+Sometimes the only thing you can do is let the exception run through. However, for cases like node.js it will stop the process it is running on.
+
+Its bad practice to just have a blanket catch when trying to handle exceptions. There are instances where you can be hiding useful information to solve an issue. Sometimes its better to extend the Error() class into another error class that you can throw, and then see if an Error is an instance of that using the ```instanceOf``` operator to handle things appropriately.
+
+## Assertions
+You can add assertions in your code to check if you have made any mistakes.
