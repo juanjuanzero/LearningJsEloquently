@@ -891,3 +891,36 @@ console.log(t1 instanceof Rabbit);//false
 
 ### Excercise Notes
 When you are overriding an iterator on the class declaration all you have to do is override the ```Symbol.iterator``` property and all that property does is instantiates an iterator class that gives the value of an iterable collection through an object with a ```value``` property and a boolean ```done``` property 
+
+# Chapter 7
+So chapter 7 is a project that the book outlines as a thing that you should do. I'm not going to go through the project at the moment. Maybe i'll come back to it some othe time.
+
+# Chapter 8
+## Bugs, Errors and JavaScript
+You might be use to a language that cares a lot about how you write things, and there may be tooling available to tell you if something is messed up in the code. For example, when you try to use a different primitive types in a function in C#, the dreaded red-squigly line shows up. But because JavaScript is so loose about it the language itself does not catch those kind of things, and therefore wont let the user know until it reaches someone.
+
+## Strict Mode
+JavaScript has a scrict mode that you can enable, but that only goes so far. You can add ```"use strict";``` at the top of the file or at the top of a function declaration.
+
+```javascript
+function canYouSeeTheIssue(){
+    //"use strict";
+    for (counter = 0; counter < 10; counter++){
+        console.log("Hello i am happy");
+    }
+}
+
+canYouSeeTheIssue();
+```
+The code above will run with no problem; but the issue is that counter is not declared (putting ```let``` or ```const```) within the scope of the for loop, so its declared globaly which could lead to massive confusion. When ```use strict``` is uncommented out then you can see that there is a reference error. 
+
+>Being told something is wrong immediately is very helpful
+
+## Types
+JavaScript considered types only when actually running the program. Use TypeScript.
+
+## Testing
+Use a test suite
+
+## Debugging
+
