@@ -995,3 +995,91 @@ Its bad practice to just have a blanket catch when trying to handle exceptions. 
 
 ## Assertions
 You can add assertions in your code to check if you have made any mistakes.
+
+# Chpater 9
+Gonna skip this one for now.
+
+# Chapter 10
+Some programs as they are architected to where everything is tied together. Does that make for good design? Not really, because it would be hard to focus on one peice of the program. And if you take one thing out, then the whole things falls apart and your hands get dirty. This is why those kinds of programs can be called a "big ball of mud"
+
+## Modules
+Modules are an attempt to avoid these problems. A module is a piece of program that specifies which other pieces it relies on and which functionality it provides for other **modules** to use. 
+
+Modules are like LEGOs where they have well-defined connectors (interfaces). These connectors (interfaces) is how code outside of the module interacts with the module. Everything else is private.
+
+Relationships between modules are called dependencies. A module will know what other modules it will depend on.
+
+## Packages
+A package is really just a chunck of code that can be distributed as its own discrete piece of code. It can contain one or more **modules** and know what other modules it depends on.
+
+### npm: two things
+NPM is JavaScript's online service that users can go to to download and upload packages. It is also a program bundled with Node.js that helps users install and manage packages.
+
+Having packages helps everyone be more productive. Instead of 10 people writting the same code, 1 person could write it as a package and share that code with 9 other people.
+
+It would certainly be nice to load in the dependent modules of the modules that you just downloaded. Fortunately JavaScript has a way to do that.
+
+## Evaluating data as code
+Before teams would have had to improvised modules to make things work. JavaScript has a eval() function that you can use to evaluate a passed in string, however, using the eval() function can lead to unexpected behavior. Instead we can use the Function constructor to pass in a string as a function.
+
+## CommonJS
+The most widely used approach to bolted-on JavaScript. The main thing with CommonJS is the keyword ```require```. Which brings in dependencie and makes the available in the local scope of a program. CommonJS loads these through a loader and returns its interface.
+
+Consider the following code as a module called format-date. I've saved it as the **format-date.js** file in this chapter:
+
+```javascript
+const ordinal = require("ordinal");
+const {days, months} = require("date-names");
+
+exports.formatDate = function(date, format){
+    return format.replace(/YYYY|M(MMM)?|Do|dddd/g, tag => {
+        if(tag == "YYYY") return date.getFullYear();
+        if(tag == "M") return date.getMonth();
+        if(tag == "MMMM") return months[date.getMonth()];
+        if(tag == "D") return date.getDate();
+        if(tag == "Do") return ordinal(date.getDate());
+        if(tag == "dddd") return days[date.getDay()];
+    });
+};
+```
+The keyword ```require``` references the **ordinal** and **date-names** modules available for download at npmjs.com. ordinal is a single function that parses the date where as date-names contains an array of days and an array months that we access in the function. We are *desctructuring* (mentioned earlier) to get days and months from the  date-names dependency.
+
+Then with the ```exports``` keyword the module add a function called formatDate which is the function (interface) that outside code can use to format dates.
+
+Now to use this module we'll need to install ordinal and date-names as a module. In the command line we run the following lines in the terminal. Note: i already have node.js installed.
+
+To install the ordinal module locally:
+```
+npm install ordinal
+```
+To install date-names module locally:
+```
+npm install date-names
+```
+Then in a place where we'd want to use the format-date module, we can just call up the require method for that module. In the chapter10.js file we have the following code.
+
+```javascript
+const {formatDate} = require("./format-date");
+console.log(formatDate(new Date(2017, 9, 13), "dddd the Do"));
+```
+
+## ES modules
+ECMAScript modules. This is the JavaScript standard from 2015. The concepts are the same but the details are a bit different from CommonJS. With ES modules you use the ```import ... from ...``` keyword. The ```export``` keyword is used similarly conceptually, however it is implemented differently. 
+
+Here is format-date module updated as an ES module.
+
+```javascript
+import ordinal from "ordinal";
+import {days, months} from "date-names";
+
+export function formatDate(date, format){
+    return format.replace(/YYYY|M(MMM)?|Do|dddd/g, tag => {
+        if(tag == "YYYY") return date.getFullYear();
+        if(tag == "M") return date.getMonth();
+        if(tag == "MMMM") return months[date.getMonth()];
+        if(tag == "D") return date.getDate();
+        if(tag == "Do") return ordinal(date.getDate());
+        if(tag == "dddd") return days[date.getDay()];
+    });
+};
+```
