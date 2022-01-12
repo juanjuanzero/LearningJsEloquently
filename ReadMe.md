@@ -1066,11 +1066,19 @@ console.log(formatDate(new Date(2017, 9, 13), "dddd the Do"));
 ## ES modules
 ECMAScript modules. This is the JavaScript standard from 2015. The concepts are the same but the details are a bit different from CommonJS. With ES modules you use the ```import ... from ...``` keyword. The ```export``` keyword is used similarly conceptually, however it is implemented differently. 
 
-Here is format-date module updated as an ES module.
+### Working with ES modules in the file
+
+If you want to create CommonJs module but as an ES module. You will have to do the following:
+- Comment out the CommonJS calls in the Chapter10.js file.
+- In the package.json file that got added when the modules were installed add the following property. ```"type": "module",```. This will tell node that you. Then you can start using the ```import from``` and ```export``` keywords. Basically when you have ```"type": "module",``` you can use the keyword. If you don't you should use the ```require()```.
+
+Here is format-date module updated as an ES module. This is saved as a different file. format-dateES.js.
 
 ```javascript
 import ordinal from "ordinal";
-import {days, months} from "date-names";
+
+import dateNamesPkg from "date-names";
+const {days, months} = dateNamesPkg;
 
 export function formatDate(date, format){
     return format.replace(/YYYY|M(MMM)?|Do|dddd/g, tag => {
@@ -1083,3 +1091,20 @@ export function formatDate(date, format){
     });
 };
 ```
+The export keyword here can appear in front of a function, class or binding definition (let, const, var).
+
+Notice how ```date-names``` is bound to the local variable ```dateNamesPkg``` in this module. This is because ```date-names``` is a CommonJS module and may not support all module.exports as named exports. Therefore, we had to import it as an object and then destructure it.
+
+ES modules's interface is not a single value but a set of named bindings. When we import a module, we import the binding, not the value.
+
+All this can seem awkward when working through things, but the JS community is transitioning, and slowly adopting the standard.
+
+## Building and Bundling
+So now that we can create modular code, code in separate, isolated pieces that work together. We now face a problem in the web that needs to make use of our code. A web page can reference as many javascript files it needs to add functionality to the page. However, if you end up with a bunch of files, fetching them over the network can take a lot of time. This problem is solved by *bundlers*. To help with our problem even more, we can make our file smaller with the use of *minifiers*. 
+
+## Module Design
+Things to keep in mind when structuring your module:
+- Ease of Use: Make it easy for your self to use.
+- Keep it simple and focused: use simple to understand data structures and doing a single focused thing. Many simple things are more useful and maintainable than one thing that can do many things.
+- Funtion First: if something can be done with a function, use a function, in this way you would create less interdependencies and move on with your life.
+- Follow: when working with multiple modules those modules could expect specific data structures. To keep things simple, try to follow those instead of creating your own.

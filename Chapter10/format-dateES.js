@@ -1,5 +1,7 @@
 import ordinal from "ordinal";
+
 import {days, months} from "date-names";
+//const {days, months} = dateNamesPkg;
 
 export function formatDate(date, format){
     return format.replace(/YYYY|M(MMM)?|Do|dddd/g, tag => {
