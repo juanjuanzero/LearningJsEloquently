@@ -50,3 +50,13 @@ for(let power of powers(3)){
 }
 
 
+console.log("\n--------Event Loop----------\n");
+
+let start = Date.now();
+setTimeout(() => {
+    console.log("Timeout ran at", Date.now() - start)
+}, 20);
+
+while (Date.now() < start + 50){}
+console.log("Here we are at the end", Date.now() - start);
+
