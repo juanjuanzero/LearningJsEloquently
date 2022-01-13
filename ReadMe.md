@@ -1243,3 +1243,23 @@ Async function is a special type of generator. It makes a Promise when called, w
 Asynchronous function behavior happens on its own empty call stack. Therefore if you tried to catch an exception that happend within a call it wont be caught.
 
 No matter how you think of it, a JavaScript environment will run only one program at a time. You have to think of it like an event loop, when there is nothing to do the loop is stopped. As events come in they are added to a queue and their code is executed one after the other.
+
+In this example, the callback on the setTimeout method will be executed after the end.
+
+```javascript
+let start = Date.now();
+setTimeout(() => {
+    console.log("Timeout ran at", Date.now() - start)
+}, 20);
+
+while (Date.now() < start + 50){}
+console.log("Here we are at the end", Date.now() - start);
+```
+
+Where as Promises always resolve or reject as a new event. Even if a Promise is already resolved, waiting for it will cause your callback to run after the current script finishes, rather than right away.. this is why we are seeing our Promise logs at the end in the terminal.
+
+## Asynchronous bugs
+Be mind of when your code runs and where there could be asynchronous gaps.
+
+## Excercises
+Gonna skip it for now since, i didnt familiarize myself with crow-tech
