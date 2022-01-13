@@ -239,9 +239,15 @@ class Group {
     constructor(){
         this.items = [];
     }
-
+    /*
     [Symbol.iterator] = function() {
         return new GroupIterator(this);
+    }*/
+
+    [Symbol.iterator] = function*(){
+        for(let i = 0; i < this.items.length; i++){
+            yield this.items[i];
+        }
     }
 
     add(toAdd){

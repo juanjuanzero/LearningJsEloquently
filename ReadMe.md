@@ -1108,3 +1108,138 @@ Things to keep in mind when structuring your module:
 - Keep it simple and focused: use simple to understand data structures and doing a single focused thing. Many simple things are more useful and maintainable than one thing that can do many things.
 - Funtion First: if something can be done with a function, use a function, in this way you would create less interdependencies and move on with your life.
 - Follow: when working with multiple modules those modules could expect specific data structures. To keep things simple, try to follow those instead of creating your own.
+
+# Chapter 11
+In a computer the processor handles a task to do some work. Sometimes the processor has to wait for something outside of itself, such as another computer in the network doing another task or another process getting information from storage. It would be nice to have the be doing something rather than just being idle.
+
+In a synchronous system, the task would be executed and completed one after another. But what if the system was able to multi-task? Doing multiple task at once? This would be an asynchronous system.
+
+How do computers do this? They use threads. a thread is another running program whose execution may be interleaved (inserted into) with other programs by the OS. You know how now adays you have computers with multiple processors, multi-threaded programs take advantage of these. A thread could have a peice of work, then a second thread could start a second requeset. Then both threads wait for the results to come back, after which they resynchronize to combine the results.
+
+In a synchronous model, waiting for actions is *implicit*. Meaning its implied that the program will just wait for the each execution. Whereas, in a asynchronous model it is explicit which means under our control.
+
+## Callbacks
+A callback function is a function that typically gets associated with asynchronous programming. Callback funtions are typically passed into slow performing functions. The action is started in the function, and once the function is finished the callback function is call with the result.
+
+An example of a function that takes in a callback as an arguement is the setTimeout().
+
+```javascript
+setTimeout(() => console.log("Hello there, timer ended"), 500);
+```
+
+Here the ```() => console.log("Hello there, timer ended")``` piece is the callback function, also called the handler.
+
+## Promises
+Asynchronicity is contagious. When one function uses an asynchronous function that function must also be asynchronous. And as a result it can be more involved and error prone.
+
+A *promise* is an asynchronous action that may complete at some point and produce a value. It is able to notify anyone who is interested when it is available. 
+
+A way to create a promise is through ```Promise.resolve()```. This function makes sure that the value you pass in is wrapped in promise. To get to the result of a promise you can use the ```then()``` method.
+
+The then() registers a callback function to be called when the promise resolves and produces a value. The then method returns another promise which resolves to the value that the handler functions returns... or if that returns a promis, it waits for that promise and then resolves to its result.
+
+You can add callbacks to the then method in a promise, and it will be executed. In fact you can add as many callbacks as you want in a promise. This is actually how Promises improves JavaScript, because in the past we would have had to asynchronous code using only callbacks. If the code was a bit complex then, you end up having what developers called the *callback pyramid OF DOOM* (dan dan duuum!).
+
+A promise is like the box Schrodinger's Cat. A normal value is simply there. Whereas, a *promised* value is a value that might be already there or might appear at some point in the future. The computations/tasks are done as the values become available (when the promise resolves).
+
+### Failures & Promises
+Promises can either be resolve (success) or rejected (failed). Resolve handlers registered with ```then``` are called only when the action is successful and rejects are automatically propagated to the new promise that is returned by the then method. Exceptions thrown automatically causes the promise produced by the then method to be rejected.
+
+A rejected promise provides a reason for the rejection. To handle rejections there is a ```catch``` method that registers a handler to be called when the promise is rejected. It also returns a new promise. You can even chain another ```then``` method to handle what happens after the ```catch```
+
+```javascript
+new Promise((_ , reject) => reject(new Error("Failure")))
+    .then(value => console.log("Handler 1"))
+    .catch(reason => {
+        console.log("Caught failure " + reason);
+        return "catch's return";
+    })
+    .then(value => console.log(value,"Handler 2"));
+
+//Caugth failure Error: Failure
+//catch's return Handler 2
+```
+
+Here we have a promise that returns a call to the ```reject``` method, which contains an error with the message of ```"Failure"```. Notice how the ```"Handler 1"``` is never printed onto the console. This is because the promise was rejected. The callback registered on the catch method handles the rejected promise by printing out the ```"Caught failure ..."``` message to the console, it also returns the string ```"catch's return"```, which is handled by the ```then``` method chained after catch, which prints it out to the console with the string ```"Handler 2"```.
+
+You can think of the chains of promise values created by calls to ```then``` and ```catch``` as a pipeline which async values or failures move through. Each has a success handler or a reject handler or both.
+
+Another useful resource here is mozzilla's [Using Promises Post](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises). Here is another example of a pipeline of a promise where a handler takes care of what happens no matter what.
+
+```javascript
+
+new Promise((resolve, reject) => {
+    console.log("hello, this is the initial resolution");
+
+    resolve(); //successfully complete the task
+}).then(() => {
+    throw new Error("failed, oops");
+    console.log("never logged because error was thrown before me.");
+}).catch(
+    () => {
+        console.error("hello from catch block");
+    }
+).then(
+    () => {
+        console.log("say this no matter what");
+    }
+);
+```
+
+### Waiting on Promises
+If you have a bunch of Promises, and you want to wait for all of them to be successfully resolved, you can use the Promise.all method. This returns a Promise that waits on all of the promises in the array of Promises passed in to resolve and then returns an array of values. If any Promise is rejected the result of Promise.all is rejected.
+
+## Async/Await Functions
+An ```async``` function returns a Promise (implicitly). Inside it's body, it can await other Promises in a way that looks synchronous. As soon as the body returns something, the Promise is resolved.
+
+The ```await``` keyword can be put infront of an expression to wait for a Promise to resolve and only then continue the execution of the function.
+
+Having ```async``` and ```await``` makes your code look more like synchronous code.
+
+## Generator Functions
+No im not talking about those machines that produce power. I'm talking about the JavaScript feature for *generator* fuctions. Its has a mechanism where execution is paused and then resume again (after certain conditions). 
+
+Generator functions are defined with the function* (an asterisk after the function keyword). It becomes a generator. When you call a generator, it returns an iterator.
+
+```javascript
+function* powers(n){
+    for(let current = n;; current *= n){
+        yield current;
+    }
+}
+//looking over since the Generator returns an iterator
+for(let power of powers(3)){
+    if(power > 50) break;
+    console.log(power);
+}
+```
+
+Here we have a generator function (Generator) that goes infinitely and multiplies the passed in arguement ```n``` with itself. There is a yeild statement the gives the current value every time. When you call the powers funtion, nothing happens. Then when the next method is called on the iterator that it returns it runs and pauses at the yeild expression. The yeilded value becomes the value of next. When the function returns (not shown here) the iterator is done.
+
+In short you can rewrite the Group iterator to something like:
+
+```javascript
+//THE OLD WAY
+/*
+[Symbol.iterator] = function() {
+    return new GroupIterator(this);
+}*/
+
+[Symbol.iterator] = function*(){
+    for(let i = 0; i < this.items.length; i++){
+        yield this.items[i];
+    }
+}
+```
+This means that you dont have to use another object to keep track of who is next (GroupIterator). 
+>Note that the yeild expression can only occur directly in the generator function and not in an inner function inside the generator.
+
+The generator only saves the its local environment when yeilding and the position where it yeilded.
+
+### What do Generators have to do with async and await?
+Async function is a special type of generator. It makes a Promise when called, which is resolved when it returns (finishes) and rejected when it throws an exception. Whenever it yeilds (awaits) a promise, the result of that promise (value or thrown exception) is the result of the await expression.
+
+## An Event Loop
+Asynchronous function behavior happens on its own empty call stack. Therefore if you tried to catch an exception that happend within a call it wont be caught.
+
+No matter how you think of it, a JavaScript environment will run only one program at a time. You have to think of it like an event loop, when there is nothing to do the loop is stopped. As events come in they are added to a queue and their code is executed one after the other.
