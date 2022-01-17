@@ -1263,3 +1263,432 @@ Be mind of when your code runs and where there could be asynchronous gaps.
 
 ## Excercises
 Gonna skip it for now since, i didnt familiarize myself with crow-tech
+
+# Chapter 12
+I was a bit confused by this at first. I guess i just didnt understand what it was saying well enough. In this chapter we create a programming language, that is backed by JavaScript.
+
+## Parsing
+The programming language needs a parser, it is a piece of program that produces a data structure that reflects the structure of the logic (program) that was written out in the text it consumed.
+
+Here are some of the other peculiarities of the programming language.
+- Everything in the language is an expression. a expression can be the name of a binding, a number, a string or another piece of logic (an application [applying something]) which references a function call or other constructs like *if* and *while*. **The book calls this an application**.
+- The language is called Egg
+- Applications are written the way they are in JavaScript, putting () after an expression and having any number of arguements inside the () separated by commas.
+- The syntax has no concept of a block.
+
+Here is an example of an application written in Egg
+
+```
+do(
+    define(x , 10),
+    if(
+        >(x , 5),
+        print("large"),
+        print("small")
+    )
+)
+```
+A ```do``` construct is needed to work with the lack of blocks.
+
+The parser will then read this text to create a data structure, which will be expression objects, each with a ```type``` property indicating the kind of expression it is and other properties to describe the content.
+
+Here are some notes of how the parser will create the data structure.
+
+- Expressions of type ```value``` represent literal strings or numbers. 
+- The ```value``` property will contain the string or number value that they represent.
+- Expressions of type ```word``` will be used for identifiers, which will have a name property.
+- Expressions of type ```apply``` represent the logic (application) which will have an operator property and an args property. 
+  - The ```operator``` property will hold the expression being applied.
+  - The ```args``` property will be an array of arguement expressions
+
+Therefore the part ```>(x, 5)``` part will be expressed like:
+```javascript
+{
+    type: "apply",
+    operator: {type "word", name: ">"},
+    args:[
+        {type:"word", name:"x"},
+        {type:"value", value:5}
+    ]
+}
+```
+This is called a **syntax tree**. Expressions contain more expressions all the way down, splitting.
+
+The parser must be recursive in order to handle reading all of the trees. Here we have the first half of the parser.
+
+```javascript
+function parseExpression(programLogic){
+    programLogic = skipSpace(programLogic);
+    let match, expression;
+    if(match = /^"([^]*)"/.exec(programLogic)){
+        expression = {
+            type: "value", 
+            value: match[1] //the first item caught in the match
+        };
+    }else if(match = /^\d+\b/.exec(programLogic)){
+        expression = {
+            type: "value",
+            value: Number(match[0]) //the all matching numbers
+        };
+    }else if(match = /^[^\s(),#"]+/.exec(programLogic)){
+        expression = {
+            type: "word",
+            name: match[0]
+        };
+    }else{
+        throw new SyntaxError("Unexpected syntax: " + programLogic);
+    }
+
+    return parseApply(expression, programLogic.slice(match[0].length));
+}
+
+function skipSpace(string){
+    let first = string.search(/\S/);
+    if(first == -1) return "";
+    return string.slice(first);
+}
+```
+
+The function ```parseExpression``` takes in the programLogic (a string) and parses it into a data structure. It makes a call to skipSpace in order to skip any whitespace the program has. After skipping the whitespace the parser uses regex to look for the 3 things that Egg is able to work with:
+- First it looks for something that matches a string, if there is a match then we create an expression object with the value of the string.
+- If no string is found, then it checks for a number, then we craten an expression object with the value of the number (casted as a number)
+- If no string or number is found, then it must be a word that is an identifier
+- An error is thrown if no input matches.
+
+Here is more info about the [RegExp.prototype.exec()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec).
+
+At the end of the ```parseExpression``` function the piece that was parsed is cut off from the string using the lenght of the matching string. The remaining string is passed into the ```parseApply``` function.
+
+Here is the parseApply function:
+```javascript
+function parseApply(expression, programLogic){
+    programLogic = skipSpace(programLogic);
+
+    //if there is no remaining open parenthesis there is nothing to read
+    if(programLogic[0] != "("){
+        return {expression: expression, rest: programLogic};
+    }
+
+    //there is an apply expression, we need to parse it
+    programLogic = skipSpace(programLogic.slice(1));
+    expression = {
+        type: "apply",
+        operator: expression,
+        args: []
+    };
+    //read everything inside the paren until you reach the closing paren
+    while(programLogic[0] != ")"){
+        //parse an expression and add it to the arg array
+        let arg = parseExpression(programLogic);
+        expression.args.push(arg.expression);
+
+        programLogic = skipSpace(arg.rest);
+
+        if(programLogic[0] == ","){
+            //if there is more skip a space
+            programLogic = skipSpace(programLogic.slice(1));
+        } else if(programLogic[0] != ")"){
+            throw new SyntaxError("Expected ',' or ')'");
+        }
+    }
+    //move the reader one char over
+    return parseApply(expression, programLogic.slice(1));
+}
+```
+
+The parseApply function reads for a piece of logic (an application). If the next character is not an opening paren then its not an application and it returns the expression. 
+
+If it is an opening paren then it skips the first one and then creates an application syntax tree. It then looks for the end or more arguements to add to its argument array. 
+
+Now all we have to do is create a function that will parse the expression. Here is one where we test it out:
+
+```javascript
+function parse(programLogic){
+    let {expression, rest} = parseExpression(programLogic);
+    if(skipSpace(rest).length > 0){
+        throw new SyntaxError("Unexpected text after program");
+    }
+    return expression;
+}
+
+console.log(parse("+(a, 10)"));
+```
+
+When i had this at first it didnt work, it kept returning undefined. As it turns out i had my bindings named incorrectly. I had it map to expr (from the book). These functions are recursive so you have to look for when it should terminate. And the only way for this to terminate is at parseApply when next item is not "(". That returns an object with an property named expression.
+
+## The Evaluator
+So now that we can reliably take a string and create a syntax tree we can now write some code that will evaluate those expressions that we wrote. 
+
+```javascript
+function evaluate(expression, scope){
+    if(expression.type == "value"){
+        //if its just a value then return the value
+        return expression.value;
+    }else if(expression.type == "word"){
+        //if its a binding, then we check if its in scope
+        if(expression.name in scope){
+            return scope[expression.name];
+        } else{
+            //if not return an error
+            throw new ReferenceError(`Undefined binding: ${expression.name}`);
+        }
+    }else if(expression.type == "apply"){
+        let {operator, args} = expression;
+        //check if the apply cation hasa word and it in the specialForms
+        if(operator.type == "word" && operator.name in specialForms){
+            //if it is get the function and pass in the arg expression with the scope. this is for expressions like if, do, while etc...
+            return specialForms[operator.name](expression.args, scope);
+        }else {
+            let op = evaluate(operator, scope);
+            //then it is a function
+            if(typeof op == "function"){
+                //we verify that it is and map the arguments can call it.
+                return op(...args.map(arg => evaluate(arg, scope)));
+            } else{
+                throw new TypeError("Appying a non-function");
+            }
+        }
+    }
+}
+```
+
+The evaluator first checks for pressions with value types and word types. If its a value type, then the value is returned. If its a word hen we check if the binding is in scope and return that scoped expression name.
+
+For applications (logic) we first desctructure the expression into operators and arguments. If the operator's type is in the specialForms (an object we'll discuss soon) like if, do and while then we get that function and pass in the arguement and scope. Otherwise, we verify that the operator is a function and call that function while passing in the argument and scope.
+
+## Special Forms
+As mentioned earlier, we are going to talk about it. This is an object used define special syntax in Egg. Like a store for our reserved keywords.
+
+
+### Special Forms: If
+Here we will add an if binding to the specialForms object
+
+```javascript
+specialForms.if = (args, scope) => {
+    if(args.length != 3){
+        throw new SyntaxError("Wrong number of args to if");
+    }else if(evaluate(args[0], scope) !== false){
+        return evaluate(args[1], scope);
+    }else{
+        return evaluate(args[2], scope);
+    }
+}
+```
+
+Here we check if the result of evaluating the first arguement (an expression) equals doesnt equal false. If not (its true) then we return the second arguement (after evaluating it ```arg[1]```). The second argument would be a value, otherwise we return the third argument (```args[2]```), which would also be a value.
+
+### Special Forms: while
+For the while special form we evaluate the the first expression (args[0]) and the scope and see if its still true (!== false), if that is the case we evaluate the expression in the second argument (args[1]). This is done until the evaluation returns false.
+
+```javascript
+specialForms.while = (args, scope) => {
+    if (args.length != 2) {
+        throw new SyntaxError("wrong number of args to while");
+    }
+
+    while (evaluate(args[0], scope) !== false){
+        evaluate(args[1], scope);
+    }
+
+    return false;
+}
+```
+
+### Special Forms: do
+One we saw in the earlier examples is the do special form. which executes arguements from the top to bottom. It executes each expression one at a time.
+
+```javascript
+specialForms.do = (args, scope) => {
+    let value = false;
+    for (let arg of args){
+        value = evaluate(arg, scope);
+    }
+    return value;
+};
+```
+
+### Special Forms: define
+There is also define that sets a name to a binding. It first expects a word with a type and then the value as the second argument. The name of the evaluated word is saved in the scope with the value.
+
+```javascript
+specialForms.define = (args, scope) => {
+    if(args.length != 2 || args[0].type != "word"){
+        throw new SyntaxError("Wrong use of define, sorry not sorry!");
+    }
+    let value = evaluate(args[1], scope);
+    scope[args[0].name] = value;
+    return value;
+}
+```
+
+So we've now added to the special forms to handle different keywords in our language. Cool. But then there is this scope arguement that gets passed on to some many of the functions that we've passed in. Lets talk about that next.
+
+## The Environment
+We've been passing around an object called scope now in our functions like evaluate() and in the special forms method. 
+
+The scope accepted by evaluate is an object with properties whose names correspond to binding names and the values correspond to values those bindings are bound to.
+
+```javascript
+const topScope = Object.create(null);
+
+topScope.true = true;
+topScope.false = false;
+```
+
+Here we defined the topScope variable that would be our global scope for the language. It is defined without a particular prototype and we give it properies ```true``` and ```false```. Those properties are bound to the values true and false in JavaScript.
+
+Recall earlier we had the ```if``` function tied to special forms. We can now evaluate an expression like so.
+
+```javascript
+let prog = parse(`if(true, false, true)`);
+console.log(evaluate(prog, topScope)); //false
+```
+
+What is happening here? We are parsing an expression into the parser. The function name with 3 arguments enclosed inside the (). The expression is parsed and then ```evaluate``` is called on the expression is recognized as a special forms function because it recognizes that ```if``` is defined. Then the evaluate function calls the function in the special forms object passing in the array of arguements and the scope parameter (```topScope``` in this case).
+
+For other operators we'll go ahead and add operators to the topScope and use Function constructor to create them quickly.
+
+```javascript
+for(let op of ["+", "-", "*", "/", "==", "<", ">"]){
+    topScope[op] = Function("a, b", `return a ${op} b;`);
+}
+```
+
+We'll also add a way to output values to the console so that we can see what is going on along the way.
+
+```javascript
+topScope.print = value => {
+    console.log(value);
+    return value;
+};
+```
+
+So now that we've defined the topScope with more operators we can do a lot of stuff with it. We'll add a run method that takes advantage of the topScope we created.
+
+```javascript
+function run(program){
+    return evaluate(parse(program), Object.create(topScope));
+}
+```
+The ```run``` method makes a call to ```evaluate``` which takes in two parameters, the expression (which is parsed by the ```parse``` method) and a scope object that takes the ```topScope``` as the prototype.
+
+```javascript
+run(`
+    do(
+        define(total, 0),
+        define(count, 1),
+        while(
+            <(count, 11),
+            do(
+                define(
+                    total,
+                    +(total, count)
+                ),
+                define(
+                    count,
+                    +(count, 1)
+                )
+            )
+        ),
+        print(total),
+        print(count)
+    )
+`);
+```
+
+The ouput is 55 (printing total) and 11 (printing count).
+
+## Functions
+Next we'll go ahead and add functions to the language. Here we go ahead and add the ```fun``` construct as a part of special forms
+
+```javascript
+specialForms.fun = (args, scope) => {
+    if(!args.length){
+        //the last argument is expected to be the body.
+        throw new SyntaxError("Functions need a body");
+    }
+    //get the body, the last arguement.
+    let body = args[args.length - 1];
+    //get all of the arguments and make sure they are words.
+    let params = args.slice(0, args.length - 1).map(expression => {
+        if(expression.type != "word"){
+            throw new SyntaxError("Parameter names must be words");
+        } return expression.name;
+    });
+
+    return function(){
+        //check the number of arguments and see if they match
+        if(arguments.length != params.length){
+            throw new TypeError("Wrong number of arguments");
+        }
+
+        //create a scope, and positionaly "bind" the parameters with the argument values.
+        let localScope = Object.create(scope);
+        for(let i = 0; i < arguments.length; i++){
+            localScope[params[i]] = arguments[i];
+        }
+
+        //call evaluate on the function to execute it with the arguments.
+        return evaluate(body, localScope);
+    };
+};
+```
+
+Here we have a function as a part of the special forms object, where anyone can define a function. When you are defining it, the function first checks if the function has a body. Then it parses the body, and then gets the paramerts for the function to be a word type. Then it a function is created (in JavaScript). The function itself checks if the correct amount of arguements have been passed into it, if not it returns an error. It then creates a local scope and maps the passed in arguements to the paramerter by their position. Then it returns a call to the ```evaluate``` method with the body and the localScope of the function. 
+
+Here it is in action
+```javascript
+run(
+    `do(
+        define(
+            plusTwo,
+            fun(a, +(a, 2))
+        ),
+        print(
+            plusTwo(2)
+        )
+    )`
+);
+```
+
+# Chapter 13
+## Networks and the Internet
+Putting cables between two or more computers allow them to send data back and forth through the cables. When you connect every computer in the network you get the *Internet*.
+
+Network Protocols: a style of communication over a network. There are protocols for sending email, getting email, sharing files. An example is HTTP (Hypertext Transfer Protocol).
+
+## HTTP
+Hypertext Transfer Protocol, a network protocol for retrieving named resources (chunks of information like web pages, text, etc). It has specifications for how two computers should talk. HTTP specifies that requestors of resources should shape their requests like this, naming the resource (index.html) and the version of the protocol that it is trying to use (HTTP/1.1)
+
+```
+GET /index.html HTTP/1.1
+```
+
+## TCP
+Transmission Control Protocol, a protocl that address the problem of making sure you can put things in order and have them arrive at the correct destination in the correct order. Most communication is built on TCP.
+
+Here is how it works:
+
+One computer (Computer A) is waiting or listening for other computers to start taking to it. In order to listen it for different kinds of communication at the same time, it has to have a designated location. A **port**.
+
+Most protocols specify which port to use. For example, emails using the SMTP protocol, the machine that we send our emails to is listening on port 25.
+
+## The Web
+
+To be part of the web, all you have to do is have your machine listen on port 80 (http), so that other computers can make a request for documents.
+
+### URL
+Each document in the web is named by a Uniform Resource Locator (URL). It looks something like the following
+
+```
+http://eloquentjavascript.net/13_browser.html
+```
+
+The ```http://``` is the **protocol**. The ```eloquentjavascript.net``` part is a **domain name** for the sever and ```13_browser.html``` part is the path that leads to the **resource**.
+
+Machines connected to the internet have an **IP Address**. This is a number that can be used to send messages to that machine. It looks like 149.210.142.219 or 2001:4860:4860::8888. The domain names are registered to map the name to a particular **IP address**. These are done through a **domain name registrar**.
+
+So requests when you type something on your web browser the browser first finds out what the IP address is through the domain name, then using the HTTP protocol it will make a connection to that computer and ask for the resource.
+
+# Chapter 14
+## The DOM (Document Object Model)
