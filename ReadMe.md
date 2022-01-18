@@ -1634,7 +1634,7 @@ specialForms.fun = (args, scope) => {
 };
 ```
 
-Here we have a function as a part of the special forms object, where anyone can define a function. When you are defining it, the function first checks if the function has a body. Then it parses the body, and then gets the paramerts for the function to be a word type. Then it a function is created (in JavaScript). The function itself checks if the correct amount of arguements have been passed into it, if not it returns an error. It then creates a local scope and maps the passed in arguements to the paramerter by their position. Then it returns a call to the ```evaluate``` method with the body and the localScope of the function. 
+Here we have a function as a part of the special forms object, where anyone can define a function. When you are defining it, the function first checks if the function has a body. Then it parses the body, and then gets the paramerts for the function to be a word type. Then it a function is created (in JavaScript). The function itself checks if the correct amount of [arguements](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments) have been passed into it, if not it returns an error. It then creates a local scope and maps the passed in arguements to the paramerter by their position. Then it returns a call to the ```evaluate``` method with the body and the localScope of the function. 
 
 Here it is in action
 ```javascript
@@ -1692,3 +1692,57 @@ So requests when you type something on your web browser the browser first finds 
 
 # Chapter 14
 ## The DOM (Document Object Model)
+When you ask for a web page, your browser gets the HTML text and parses it. The browser builds up a model of the document's strucutre and uses this model to draw the page on the screen. This acts a live data structure i.e. when the model gets updated the page on the screen also updates the data
+
+There is a *global* binding called ```document``` that gives us access to the objects (the elemments and their attributes) in the document.
+
+### Trees
+The structure of the DOM is similar to a tree. It consists of nodes, each node can have *children*, which can also have *children*. It has somewhat of a branching structure. In the DOM, the root of the tree is ```document.documentELement```. 
+
+Each Dom node object has a ```nodeType``` property, which contains a code (number identifier) that identifies the type of node. Here are a few examples of ```nodeType``` codes.
+- Elements: Node.ELEMENT_NODE (1)
+- Text: Node.TEXT_NODE (3)
+- Comments: Node.COMMENT_NODE (8)
+
+A little cryptic, and its not really that obvious. This is because the DOM was designed to be a language-neutral interface that can be used in other systems.
+
+### Moving through the Tree
+Every node has a parentNode property that points to the nodes it is a part of (if any). 
+
+Every element node has childNodes property that points to an array-like (its kinda like an array) holding it's children. In JS, you can use the ```firstChild``` and ```lastChild``` properties to get to the first/last of the child nodes in an element. There is also the ```previousSibling``` and ```nextSibling```, which points to adjacent nodes (or null where none exits). When looking through the children of every node, you might get other types that are children of the element. You can use the ```children``` property to only get the *children of an element* that is of the type *element*.
+
+### Finding Elements
+Its never really a good idea to find elements from the root. You'd have to be mind of the the structure and as we said earlier, the structure always changes.
+
+You can use ```document.body.getElementsByTagName()``` to get an array-like object of all of the decendants of that node with a given tag name. It returns an object, but if you want the array methods like map available to you, you can create an array of the object using Array.from();
+
+```javascript
+let arrayish = {0:"one", 1:"two", length: 2};
+let arrayActual = Array.from(arrayish);
+console.log(arrayActual.map(s => s.toUpperCase())); //["ONE","TWO"]
+```
+
+### Changing the Document
+Almost everything about the DOM. There are methods that are available to you. Keep in mind that a node can exist in the docomunet in only once place. Here are a few methods available to you:
+- ```appendChild```: adds a node as a child of the current node.
+- ```insertBefore```: inserts a new node before
+- ```replaceChild```: replaces a child node with a new node.
+
+### Working with Attributes
+You can create your own attributes in elements, many js libraries use attributes to add functionality. To work with attributes you use the ```getAttribute``` and ```setAttribute``` methods on the element node. Custom attributes are by convention prefixed by ```data-``` to set it apart from other attributes.
+
+### Layout
+You can use the getBoundingClientRect method to get the position of an element. You have to include the pageXOffset and pageYOffset if you want the scroll position.
+
+### Styling
+Use CSS (Cascading Style Sheets) to style your documents. You can use selectors to identify the target that you should applied, the styles can be writtend inside a ```<style>``` tag. The cascading part means that multiple rules cane be combined to produce the final style for an element. And the most recent read rule gets the highest precedence and wins. Styles applied on the `<style>` tag always has the highest precendence.
+
+In CSS you can identify targets by a class name (e.g. ```.myClass```), by id attribute (```#myId```), by element (```div``` targets div elements) and other ways.
+
+The precedence rule which favors the most recently defined rule applies only when rules have the same specificity. The specificity is how precisely it describes matching elements.
+
+### Query Selectors
+You can select elements similar to the way you select things by class using the ```querySelectorAll``` method. This returns the array-like NodeList object. You can create an actual array here using the Array.from method.
+
+# Chapter 15
+## Event Handling
