@@ -1746,3 +1746,106 @@ You can select elements similar to the way you select things by class using the 
 
 # Chapter 15
 ## Event Handling
+A large number of different types of events can happen on the browser or in any system. For example a person does a key press.
+
+### Polling
+Some systems would place an event into a queue and have a worker that checks a queue if there is anything to process. The worker does this periodically, or the worker polls the queue periodically. This process is called Polling. This is an older way of doing things and most programmers prefer to avoid it.
+
+### Event Handlers
+A better mechanism for the system to actively notify our code when something happens (an event) is through *handlers*. In order for an event to be handled, you need something that listens for that event.
+
+In JavaScript and the DOM you can add event listeners to typical events that can happen.
+
+```html
+<p>Click on the document to activate the handler</p>
+<script>
+    window.addEventListener("click", () => {
+        console.log("You clicked on the document!");
+    });
+</script>
+```
+
+The following html block adds an *event listener* called for ```"click"``` events and a `callback function` that gets triggered when that event occurs, in this case it just logs "You clickd on the document!" to the console.
+
+### Event Handlers and DOM nodes
+In the previous example we saw an event **registered** to the window object. An object available to use through the browser. You can  **register** event listeners on particular DOM nodes as well, each browser event handler is registered in a context, and that context is the particular node the event was registered on.
+
+DOM nodes also have an attribute that you can attach event listeners to. However, you would be limited to just one handler per node since a node can only have one onclick attribute, whereas, addEventListener you can register as many event listeners as you want. The only challenge is selecting the node.
+
+## Event Objects
+When an event is created in the browser the event handler functions get passed an arguement called the event object. This object holds additional information about the event itself. It varies on the kinds of event
+
+>Additional resource of events [here](https://developer.mozilla.org/en-US/docs/Web/Events/Event_handlers).
+
+## Propagation
+When an event happens on a node, it *bubbles* up to the parent of the node. For example, if there is a button on the paragraph element and there is a ```click``` event listener. Both the button and the paragraph will *hear* the click event. The event propagates up the tree, all the way up to the root. 
+
+### What if you have the same handler type for the child and parent?
+If both the parent and the child have a handler for the event, then the child's handler gets to go first. 
+
+You can stop events from propagating upwards the tree using the ```stopPropagation``` method.
+
+Most nodes also a have a ```target``` property that identifies the target that it was pointed to.
+
+## Default Actions
+When events happen, there is typically a default behavior, much like when you click a link you get taken to links target, or pressing the down arrow scrolls the page down.
+
+For most types of events, the JavaScript event handlers are called *before* the defaul behavior takes place. If the handler doesn't want the normal behavior to happen (maybe because the handler does something similar), you can call the ```preventDefault``` method on the event object.
+
+## Key Events
+- For tracking keyup and keydown events on the browser.
+- When nothing is in focus, document.body acts as the target node of key events.
+- Some platforms like the android keyboard, don't generate key events.
+- To see what was actually typed, you might want to check out ```input``` events on ```<input>``` and ```<textarea>``` tags
+
+## Pointer Events
+### Mouse Clicks
+- When a someone clicks a mouse they fireoff a ```mousedown``` event, when they let go, it is then followed up by a ```mouseup``` event, which then fires a ```click``` event. The click event fires on the most specific node that contains where both the mousedown and mouseup fired. 
+- clientX and clientY properties tell you where the event happened.
+
+### Mouse Motion
+- every time a pointer moves, it triggers a ```mousemove``` event.
+
+### Touch Events
+- You have ```touchstart```, ```touchmove``` and ```touchend``` events that fire when a user touches the window.
+- Touch events have a touches property that holds the an array like object of points each with its own clientX, clientY, pageX and pageY properties.
+
+### Scroll Events
+- When an element is scrolled on it fires a scroll event.
+- The positioning can impact if a scroll event can happen, if it has a position of fixed or absolute.
+- pageYOffset gives you the current scroll position.
+- calling preventDefaul on a scroll event does not prevent the scrolling from happening. The event handler is only called after teh scrolling happens.
+
+### Focus Events
+- when an element gains focus a ```focus``` event fires. When it loses focus the element gets a ```blur``` event.
+
+### Load Event
+- When a page finises loading it fires a `load` event on the window and the document body objects.
+
+## Events and the Event Loop
+As mentioned previously JavaScrit only processes one event at a time. Events that are triggered by browser events are scheduled to run after the other scripts are finished running. 
+
+You should try and avoid long running processes tieing up your page. To help you in this, there are web workers.
+
+### Web Workers
+Workers do not share their global scope or any other data with the main script's environment. You communicate with workers by sending messages with them. Messages are represented as JSON.
+
+## Timers
+- We are familiar with setTimeout, you can also use clearTimeout method and passing in the value returned by the setTimeout method.
+- setInterval and clearInterval are useful for using actions that run repeatedly.
+
+## Deboucing
+Sometimes when an event occurs too rapidly and a process is tied to the event firing, like someone typing on a search box, we dont want to tie each process up, when the value input keeps getting updated. We can use setTimeout to make sure that we are not doing this way too often. This is called debouncing.
+
+```javascript
+let textarea = document.querySelector("textarea");
+let timeout;
+textarea.addEventListener("input", () =>{
+    clearTimeout(timeout);
+    timeout = setTimeout(() => console.log("You typed something!!"), 500);
+});
+```
+here we add a timeout variable, and register an event listener to clear the timeout everytime the input is handled, then wait 500 miliseconds to execute the work. In this case log a message to the console.
+
+# Chapter 16
+## Project: A Platform Game

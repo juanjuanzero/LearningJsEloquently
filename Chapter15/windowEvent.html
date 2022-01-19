@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>Click on the document to activate the handler</p>
+        <textarea>Something something</textarea>
+        <script>
+            window.addEventListener("click", () => {
+                console.log("You clicked on the document!");
+            });
+
+            let textarea = document.querySelector("textarea");
+            let timeout;
+            textarea.addEventListener("input", () =>{
+                clearTimeout(timeout);
+                timeout = setTimeout(() => console.log("You typed something!!"), 500);
+            });
+        </script>
+    </body>
+</html>
