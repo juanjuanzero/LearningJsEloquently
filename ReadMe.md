@@ -1848,4 +1848,109 @@ textarea.addEventListener("input", () =>{
 here we add a timeout variable, and register an event listener to clear the timeout everytime the input is handled, then wait 500 miliseconds to execute the work. In this case log a message to the console.
 
 # Chapter 16
-## Project: A Platform Game
+Skipped for now
+
+# Chapter 17
+## Drawing on the Canvas
+There are two ways to represent shapes on a page. You can use SVG files which describe shapes. And you can also use a canvas. A canvas is a special type of node where the shapese are converted to pixels, and as soon as they are drawn.
+
+## Brief Note of SVGs
+SVGs are really mathematical representations of a shape, they can be brought into your html using the ```<svg>``` tag. Inside the svg tag you can have svg elements that your javaScript code can interact with.
+
+## The Canvas Element
+The ```<canvas>``` tag gives you a canvas in your html document. There you can draw your canvas graphics. A new canvas is empty, and show up as empty space in the document. To work with the canvas, you need to create a context where which you will be interactive on. There are two widely supported drawings styles: "2d" and "webgl". 
+
+We will focus on "2d". A context is created using the getContext method on the canvas element.
+
+```html
+<!DOCTYPE html>
+<body>
+    <p>Hello this is before the canvas</p>
+    <canvas width="120" height="60"></canvas>
+    <p>And this is after the canvas</p>
+    <script>
+        let can = document.querySelector("canvas");
+        let context = can.getContext("2d");
+        context.fillStyle = "red";
+        context.fillRect(10, 10, 100, 50);
+    </script>
+</body>
+```
+
+Here we have a simple html page with a canvas, and we grab the "2d" context on the canvas and set the `fillStyle` property to red and create a rectangle with the dimensions.
+
+## Lines and Surfaces
+A shape in a canvas can either filled (just like in the `fillRect` method) or stroked which draws the outline border of a rectangle.
+
+The fill, thickness and properties of the shape that is drawn on to the canvas are not properties of a method passed in but rather properties that are set on the context object that is returned by calling the getContext method.
+
+```html
+<!DOCTYPE html>
+<body>
+    <p>Hello this is before the canvas</p>
+    <canvas id="can1" width="120" height="60"></canvas>
+    <p>And this is after the canvas</p>
+    <canvas id="can2" width="120" height="60"></canvas>
+    <script>
+        let can = document.querySelector("#can1");
+        let context = can.getContext("2d");
+        context.fillStyle = "red";
+        context.fillRect(10, 10, 100, 50);
+
+        let canTwo = document.querySelector("#can2").getContext("2d");
+        canTwo.strokeStyle = "blue";
+        canTwo.strokeRect(5,5,50,50);
+        canTwo.lineWidth = 5;
+        canTwo.strokeRect(135,5,50,50);
+    </script>
+</body>
+```
+
+## Paths
+When you want to draw a path, it has to be handled through side effects. Here is some code that writes out lines.
+
+```javascript
+<canvas id="can3"></canvas>
+<script>
+    let cx3 = document.querySelector("#can3").getContext("2d");
+    cx3.beginPath();
+    for(let y = 10; y < 100; y += 10){
+        cx3.moveTo(10, y);
+        cx3.lineTo(90, y);
+    }
+    cx3.stroke();
+</script>
+```
+Here we call the ```beginPath``` method on the context, then from there we draw lines starting at the *current position*. We use the ```moveTo``` method to move to that position, and then to write the line we call the ```lineTo``` method with the ending position. This also becomes the current position. We call this periodically to create 9 lines.
+
+> I'g gonna stop here for now since i want to focus more on Node.js
+
+# Chapter 21
+## Node.js
+When Node.js is installed it provides a program called `node`. This program that you execute on the command line is used to run JavaScript files. You could have a file with the following contents:
+
+```javascript
+let message = "Hello world";
+console.log(message);
+```
+
+This let say is called helloworld.js. You could execute this JavaScript code, using `node` by the following:
+
+```
+node helloworld.js
+\\Hello world
+```
+console.log() does something similar in node. But instead of the browser JavaScript console, the output goes on to the process's standard output stream.
+
+In the terminal, you can just type `node`. This will provide you a prompt (REPL) where you can type JavaScript code and see the result. You can exit the process using `process.exit(0)` method. The process is a binding just like console that is available in node for you to work with.
+
+## Modules
+To access built-in functionality you have to ask the module system for it. The CommonJS module system is build into Node.
+
+When ```require``` in CommonJS is called, Node has to resolve the given string to an actual file that it can load. Pathnames that start with /, ./ or ../ are resolved relative to the current module's path.
+- `.` stands for the current directory
+- `..` stands for one directory up
+- `/` stands for the root of the file system
+
+For example, if you 
+
