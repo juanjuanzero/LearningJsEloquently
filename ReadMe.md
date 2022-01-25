@@ -1952,5 +1952,173 @@ When ```require``` in CommonJS is called, Node has to resolve the given string t
 - `..` stands for one directory up
 - `/` stands for the root of the file system
 
-For example, if you 
+For example, if you `require "./graph"` from a file in the directory `/tmp/robot/robot.js`, Node will try to load the file `/tmp/robot/graph.js`. If the file path refers to a directory, Node will try to load the file named `index.js` in that directory.
 
+If a string does not look like a relative or absolute path in the require method called. Node will either assume that it is a built-in module or a module installed in the ```node_modules``` directory. For example, ```require("fs")``` will get nodes built in file system module, whereas ```require("robot")``` will try to load the library found in ```node_modules/robot/```.
+
+We'll setup a small project with two files here. I'll put everything inside ```Modules_SmallProject``` in this chapter's folder. We'll have two files main.js and a reverse.js. 
+
+Here is what main.js looks like:
+```javascript
+const {reverse} = require("./reverse");
+
+//get the third item which holds the actual command line argument.
+let argument = process.argv[2];
+console.log(reverse(argument));
+```
+
+Here is what reverse.js looks like. This will be in the same directory as main.js. Node will add the .js file extension to to get the file.
+
+```javascript
+exports.reverse = function(string) {
+    return Array.from(string).reverse().join("");
+}
+```
+
+The reverse module does not take in any other modules. It addes a reverse property, with a function bound to it. This function takes in a string and creates an Array from it (using `Array.from()`) and calls the `reverse()` on the array object, and then calls the `join()` on the object. The `join()` returns a string as a result, which then gets passed to the ``console.log()`` method in main.js. Node then writes the output of ```console.log()``` on to `stdout`.
+
+To test this out, you can write the following, be sure to go into the correct directory before using it:
+```
+node main Hello 
+```
+This will be the output: ```olleH```
+
+## Installing NPM
+NPM is nodes package manager. When you run ```npm install```. NPM will create a directory in where you ran ```npm install``` and it will be called `node_modules` there you will find folders that contain all of the modules that you have installed through node. 
+
+There will also be a package.json file that will be added where you ran `npm install`. This file describes the depedencies of your project. Each time you install a project. NPM will modify this file
+
+### Versions
+NPM demands that its packages follow a schema called semantic versioning which just describes a way to describe what versions should be compatible. This way of naming consists of 3 numbers delimited by periods `.` like 2.3.0.
+- Every time functionality is added the middles number is incremented
+- Every time there is a breaking change so that the existing code uses the package might not work with the new version the first number is incremented.
+
+For example you can have `^2.3.0`. The `^` means that any version number greater than or equal to 2.3.0 and less than 3.0.0 is allowed. At 3.0.0 there would be a breaking change.
+
+### Publishing
+You can also publish packages using the `npm publish` command. Note that you can only publish a package that has name that isnt already taken.
+
+## Fun with Modules
+### The File System Module
+There is a build in module in node that you can have some fun with called the file system module. This module allows you to work with files.
+
+We'll create a `Modules_FileSystem` on the folder to play around with this we'll create a main.js file and in that file we have the following code:
+
+```javascript
+let {readFile} = require("fs");
+readFile("file.txt", "utf-8", (error, text) => {
+    if(error) throw error;
+    console.log("Hey here are the file contents: ", text);
+});
+```
+Here readFile method from the `fs` module is expecting a `file.txt` file in the same directory. We pass in a handler arrow function that takes an an error and the text as parameters and processes them appropriately. [Here more information on the readFile()](https://nodejs.org/api/fs.html#fsreadfilepath-options-callback).
+
+If you run this code with out the file.txt file in the same directory. It will give you an Error. This error gets thrown due to our callback.
+
+We'll add another text file, file.txt in the same directory to show that we can read it.
+
+```javascript
+Hello There,
+This is text from the file
+```
+
+This gets read by the node when you call ```node main``` on that directory.
+
+I know we used callbacks in this example here, but Node also has a format that more based on promises. There are also synchronous versions of the same methods that you see.
+
+## HTTP Module
+The http module is another built-in module that is commonly used here. We'll go ahead and create another folder for this chapter called `Modules_Http`. We'll eventually make two files, one for the server and another for a client. We'll create the server first and access it using our browser.
+
+### Creating a Server
+Here is the server code in a file called mainHttp.js:
+```javascript
+const {createServer} = require("http");
+let server = createServer((request, response) => {
+    response.writeHead(200, {"Content-Type": "text/html"});
+    response.write(`
+        <h1>Hello There, I am the server</h1>
+        <p>you asked for <code>${request.url}</code></p>
+    `);
+    response.end();
+});
+
+server.listen(8000);
+console.log("I am listening on port 8000");
+```
+
+Be sure you are in the correct working directory `Modules_Http`. If you run this code using `node mainHttp`. It will log the message "I am listening on port 8000", as its the last line on the code. But you'll notice that it hasnt stopped executing. This is because the server is now listening for requests to come in. If you go to your browser and navigate to `http://localhost:8000`, you should see a page similar to the html page that you saw.
+
+From the http module we destructure the createServer object, here we pass a callback that handles requests and responses. We configure the response to a request to return an html document. This is first identified by the `{"Content-Type": "text/html"}` which tells the browser (the client) that recieves the response to the request that the response is an html text document. Then in the response body, the html document is written. The `response.end()` method tells the document that we've reached the end of the file.
+
+More sophisticated servers will also review the request type and decide what needs to be done in that situation whether to apply more business logic or call another sevice.
+
+### Creating a Client
+You can also use the http module to create a client that gets requests. The following makes Node a client to request a page from the internet.
+
+```javascript
+const {request} = require("http");
+let requestStream = request(
+    {
+        hostname: "eloquentjavascript.net",
+        path: "/20_node.html",
+        method: "GET",
+        headers: {Accept: "text/html"}
+    }
+    , response => {
+        console.log("Server responded with status code",
+        response.statusCode);
+    }
+);
+requestStream.end();
+```
+
+From the http module we take the `request()` method. The first part is an object that describes the configuration of the request. This defines the request method, the path, and etc. The second part is a handler that takes care (handles) the response that comes in. In this case, the handler just logs the `statusCode` property of the response.
+
+## Streams
+### Writable Streams
+We just worked with an instances of writable streams, the response object and the request object. Writables Streams are objects that have a write mtheod that can be passes a string or Buffer object to write something to a stream. Writable Streams als have an end method to signifiy that the end of the stream has been reached.
+
+You can even have a writable stream that points at a file with the createWriteStream function in the fs module. Here you can use the write method to write to the stream. When writing to a stream, you would be doing it one piece at a time.
+
+### Readable Streams
+Reading Readable Streams are done through event handlers. Objects that emit events in Node have a method called `on`. Its similar in structure to the addEventListener method in the browser. You give it an event name and then a function, this will register that function to be called whenever the given event occurs. Readable streams have `data` and `end` events. The data event fires everytime data comes in, and the end even is called when the stream is at the end. 
+
+This model of reading streams is best for *streaming* data, data that can be immediately processed, even when the whole document isnt available yet.
+
+Here is some code that creates a server, and registers data and end events to be handled. This file is in `Modules_Streams`.
+
+```javascript
+const {createServer} = require("http");
+createServer(
+    (request, response) => {
+        response.writeHead(200, {"Content-Type":"text/plain"});
+        //register data events
+        request.on("data", chuckOfData =>{
+            response.write(chuckOfData.toString().toUpperCase());
+        });
+        //register end event
+        request.on("end", () => response.end());
+    }
+).listen(8000);
+```
+
+Next we'll create a client that will make requests to that server. Here is the code for the client.
+
+```javascript
+const {request} = require("http");
+request(
+    {
+        hostname: "localhost",
+        port: 8000,
+        method: "POST"
+    },
+    response => {
+        response.on("data", chunkOfData =>{
+            process.stdout.write(chunkOfData.toString());
+        });
+    }
+).end("Hello Server");
+```
+So when we run the server and the client at the same time, after running the client code you will see the result `HELLO SERVER` in the console. What happened? The server is listening for request that comes into it, when the server is created we registered a handler for data events. On data events, the data gets passed in chuncks. We call toString on the object and then call the toUpperCase to make the result upper case. On end events, the response.end() is called to signify the end of the response.
+
+So now on the client, we create a request that we'll send to our server. The configuration is outline in the first object, and a handler that takes in the response object. On that response object we register a data event to write the output into stdout. So then we call end() method on the request object so that it is sent to the server with the payload "Hello Server". The server then responds, which the client reads and writes to stdout (the console).
