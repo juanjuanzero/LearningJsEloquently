@@ -2122,3 +2122,157 @@ request(
 So when we run the server and the client at the same time, after running the client code you will see the result `HELLO SERVER` in the console. What happened? The server is listening for request that comes into it, when the server is created we registered a handler for data events. On data events, the data gets passed in chuncks. We call toString on the object and then call the toUpperCase to make the result upper case. On end events, the response.end() is called to signify the end of the response.
 
 So now on the client, we create a request that we'll send to our server. The configuration is outline in the first object, and a handler that takes in the response object. On that response object we register a data event to write the output into stdout. So then we call end() method on the request object so that it is sent to the server with the payload "Hello Server". The server then responds, which the client reads and writes to stdout (the console).
+
+## A File Server
+So now we'll build up a file server that we can use to share files between users. All of these files will be stored in teh `FileServer` directory.
+
+
+We'll build it up piece by piece. First we'll create our server in `mainServer.js`. We'll store the methods that map to our http requests in an object called methods.
+
+Here is what the server code looks like initially:
+```javascript
+const {createServer} = require("http");
+const methods = Object.create(null);
+
+createServer(
+    (request, response) => {
+        let handler = methods[request.method] || notAllowed;
+        handler(request)
+            .catch(
+                error => {
+                    if(error.status != null) return error;
+                    return {body: String(error), status: 500};
+                }
+            )
+            .then(
+                
+                ({body, status = 200, type = "text/plain"}) => {
+                        response.writeHead(status, {"Content-Type": "text/plain"});
+                }
+            );
+    }
+).listen(8000);
+
+async function notAllowed(request){
+    return {
+        status: 405,
+        body: `Method ${request.method} not allowed.`
+    };
+}
+```
+
+When this code is ran a server is created. If first check of the method is a valid method to be processed. Then the handler either listens for errors (if any promisses are rejected they are processed as a request). Successful promises take in the body of the request (which is a readable stream). A pipe method is called to process the response to work with that stream.
+
+At this time, the server only response with 405 since there are no methods are in the object. We'll get there.
+
+
+### Parsing Requests
+The tool will need to be able to parse urls as they come in. We'll go and add to the mainServer file the following code.
+
+```javascript
+const {parse} = require("url");
+const {resolve, sep} = require("path");
+
+//... other code here.
+
+function urlPath(url){
+    let {pathname} = parse(url);
+    let path = resolve(decodeURIComponent(pathname).slice(1));
+    
+    if(path != baseDirectory && !path.startsWith(baseDirectory + sep)){
+        throw {status: 403, body: "Nope, Forbidden"};
+    }
+    return path;
+}
+```
+Here we take add code to parse urls as they come in from requests. We utilize the `parse` method from the `url` module and the `resolve` and `sep` methods from the `path` module. The urlPath method simply takes in a url and parses it to return the path. If the file requested is not in the base directory they an object is thrown signifying that its Forbidden. This will be caught in the catch statement because the promise will be rejected and the status and body bindings will map to the response bindings.
+
+### Mime Types
+Its not the silent type. We have to be mindful of how we return the files to the requestor. So we'll need to specify the Content-Type when it gets returned in the http response. Here we'll use the mime package, this is not a built in module so we'll need to install it to as a part of our project. 
+
+Be sure to be in the correct directory (FileServer) when you install it. Here is the code to install the package:
+
+```
+npm install mime@2.2.0
+```
+This createse a node_modules directory under the current working directory where you ran this code. 
+
+Next we'll add a GET method for our system. We'll add the following code to the mainServer.js file.
+
+```javascript
+const {createReadStream} = require("fs");
+const {stat, readdir} = require("fs").promises;
+const mime = require("mime");
+
+//other code
+
+methods.GET = async function(request){
+    let path = urlPath(request.url);
+    let stats;
+    try{
+        stats = await stat(path);
+    } catch(error){
+        if(error.code != "ENOENT") throw error;
+        else return {status: 404, body: "File not found. Sorry"};
+    }
+
+    if(stats.isDirectory()){
+        return {
+            body: (await (await readdir(path)).join("\n"))
+        };
+    } else {
+        return {
+            body: createReadStream(path),
+            type: mime.getType(path)
+        };
+    }
+}
+```
+
+The GET method takes in the request. From the request, we try to get the path using the urlPath method which converts the url to a directory path. In the try-catch we are checking to see if the path exists, if so then it will be saved as the value of the `stats` variable. The stat method is taken from the `fs` module to get the status of the file. Then we check if the path is a directory, if so then we call the readdir method to return a list of files in the directory. If its not a directory, we return a readable stream usign the path and with the appropriate mime type.
+
+Next we'll add the DELETE method on the server to handle deletes.
+
+```javascript
+
+methods.DELETE = async function(request){
+    let path = urlPath(request.url);
+    let stats;
+    try {
+        stats = await stat(path);
+    } catch(error){
+        if(error.code != "ENOENT") throw error;
+        else return {status: 204};
+    }
+
+    if(stats.isDirectory()) await rmdir(path); //remove the directory
+    else await unlink(path); //remove the file
+    return {status: 204};
+}
+```
+
+The DELETE method is a bit similar. It is idempotent, its good practice to have idempotent services, meaning if you have multiple requests the result would be the same as if it was only done once.
+
+Next we'll add the PUT method for PUT requests.
+
+```javascript
+const {createWriteStream} = require("fs");
+
+function pipeStream(from, to){
+    return new Promise(
+        (resolve, reject) => {
+            from.on("error", reject);
+            to.on("error", reject);
+            to.on("finish", resolve);
+            from.pipe(to);
+        }
+    )
+}
+
+methods.PUT = async function(request){
+    let path = urlPath(request.url);
+    await pipeStream(request, createWriteStream(path));
+    return {status: 204};
+}
+```
+The PUT method reads the path and then creates a promise that pipes (through the pipe method) a write stream from the request onto the path of the current working directory. Here more information about using [stream.pipe()](https://nodejs.org/en/knowledge/advanced/streams/how-to-use-stream-pipe/). The promise has event listeners for handling error events and finish events.
